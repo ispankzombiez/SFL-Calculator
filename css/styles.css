@@ -7,6 +7,7 @@
 :root {
     --color-primary: #f9b233;
     --color-primary-dark: #e59f1f;
+    --color-primary-light: #fcd77f;
     --color-secondary: #4caf50;
     --color-success: #28a745;
     --color-danger: #dc3545;
@@ -38,6 +39,22 @@
     --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
     
     --transition: all 0.3s ease;
+}
+
+/* ===== Dark Mode Variables ===== */
+body.dark-mode {
+    --color-bg: #1a1a1a;
+    --color-bg-secondary: #2d2d2d;
+    --color-bg-card: #252525;
+    --color-border: #404040;
+    
+    --color-text: #e0e0e0;
+    --color-text-secondary: #b0b0b0;
+    --color-text-muted: #808080;
+    
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* ===== Reset & Base Styles ===== */

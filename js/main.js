@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[App] 🚀 SFL Calculator initializing...');
     console.log('[App] DOM loaded, starting Firebase initialization');
     
+    // Initialize theme
+    initializeTheme();
+    
     // Initialize Firebase
     const firebaseInitialized = await firebaseAuth.initializeFirebase();
     
@@ -280,6 +283,9 @@ function toggleProfileDropdownDashboard() {
 function updateProfileDropdown() {
     const dropdown = document.getElementById('profile-dropdown');
     const user = firebaseAuth.getCurrentUser();
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const themeIcon = isDarkMode ? '🌙' : '☀️';
+    const themeText = isDarkMode ? 'Light Mode' : 'Dark Mode';
     
     if (user) {
         // User is signed in
@@ -291,6 +297,7 @@ function updateProfileDropdown() {
             </div>
             <button class="dropdown-item" id="dropdown-profile">Profile</button>
             <button class="dropdown-item" id="dropdown-settings">Settings</button>
+            <button class="dropdown-item" id="dropdown-theme">${themeIcon} ${themeText}</button>
             <button class="dropdown-item danger" id="dropdown-logout">Logout</button>
         `;
         
@@ -305,6 +312,12 @@ function updateProfileDropdown() {
             dropdown.style.display = 'none';
         });
         
+        document.getElementById('dropdown-theme')?.addEventListener('click', () => {
+            toggleTheme();
+            updateProfileDropdown();
+            updateProfileDropdownDashboard();
+        });
+        
         document.getElementById('dropdown-logout')?.addEventListener('click', () => {
             handleSignOut();
             dropdown.style.display = 'none';
@@ -313,11 +326,18 @@ function updateProfileDropdown() {
         // User not signed in
         dropdown.innerHTML = `
             <button class="dropdown-item" id="dropdown-login">Login</button>
+            <button class="dropdown-item" id="dropdown-theme">${themeIcon} ${themeText}</button>
         `;
         
         document.getElementById('dropdown-login')?.addEventListener('click', () => {
             showLoginModal();
             dropdown.style.display = 'none';
+        });
+        
+        document.getElementById('dropdown-theme')?.addEventListener('click', () => {
+            toggleTheme();
+            updateProfileDropdown();
+            updateProfileDropdownDashboard();
         });
     }
 }
@@ -328,6 +348,11 @@ function updateProfileDropdown() {
 function updateProfileDropdownDashboard() {
     const dropdown = document.getElementById('profile-dropdown-dashboard');
     const user = firebaseAuth.getCurrentUser();
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const themeIcon = isDarkMode ? '🌙' : '☀️';
+    const themeText = isDarkMode ? 'Light Mode' : 'Dark Mode';
+    
+    if (!dropdown) return;
     
     if (user) {
         // User is signed in
@@ -339,6 +364,7 @@ function updateProfileDropdownDashboard() {
             </div>
             <button class="dropdown-item" id="dropdown-profile-dash">Profile</button>
             <button class="dropdown-item" id="dropdown-settings-dash">Settings</button>
+            <button class="dropdown-item" id="dropdown-theme-dash">${themeIcon} ${themeText}</button>
             <button class="dropdown-item danger" id="dropdown-logout-dash">Logout</button>
         `;
         
@@ -353,6 +379,12 @@ function updateProfileDropdownDashboard() {
             dropdown.style.display = 'none';
         });
         
+        document.getElementById('dropdown-theme-dash')?.addEventListener('click', () => {
+            toggleTheme();
+            updateProfileDropdown();
+            updateProfileDropdownDashboard();
+        });
+        
         document.getElementById('dropdown-logout-dash')?.addEventListener('click', () => {
             handleSignOut();
             dropdown.style.display = 'none';
@@ -361,12 +393,44 @@ function updateProfileDropdownDashboard() {
         // User not signed in
         dropdown.innerHTML = `
             <button class="dropdown-item" id="dropdown-login-dash">Login</button>
+            <button class="dropdown-item" id="dropdown-theme-dash">${themeIcon} ${themeText}</button>
         `;
         
         document.getElementById('dropdown-login-dash')?.addEventListener('click', () => {
             showLoginModal();
             dropdown.style.display = 'none';
         });
+        
+        document.getElementById('dropdown-theme-dash')?.addEventListener('click', () => {
+            toggleTheme();
+            updateProfileDropdown();
+            updateProfileDropdownDashboard();
+        });
+    }
+}
+
+/**
+ * Toggle theme between light and dark mode
+ */
+function toggleTheme() {
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    
+    if (isDarkMode) {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+    } else {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+/**
+ * Initialize theme from localStorage
+ */
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
     }
 }
 
