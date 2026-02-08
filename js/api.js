@@ -28,7 +28,7 @@ const CACHE_DURATION = {
 // Then comment out or remove the CORS_PROXIES array below.
 // =============================================================================
 
-const CUSTOM_CORS_PROXY = null; // Set to your Cloudflare Worker URL
+const CUSTOM_CORS_PROXY = 'https://sfl-proxy.caleb-bren1.workers.dev?url='; // ✅ ACTIVE
 
 // Fallback public proxies (NOTE: These block x-api-key headers!)
 const CORS_PROXIES = [
