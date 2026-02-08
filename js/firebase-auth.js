@@ -1,6 +1,7 @@
 /**
  * Firebase Authentication Module
  * Handles user authentication and data synchronization with Firestore
+ * @version 2.0.0 - Enhanced debugging and initialization
  */
 
 // Firebase Configuration (inlined to avoid ES6 module conflicts with compat SDK)
@@ -25,15 +26,17 @@ let isInitialized = false;
  * Wait for Firebase SDK to load from CDN
  */
 async function waitForFirebase(maxAttempts = 20, delayMs = 100) {
+    console.log('[Firebase] Waiting for SDK to load from CDN...');
     for (let i = 0; i < maxAttempts; i++) {
         if (typeof firebase !== 'undefined') {
-            console.log('Firebase SDK loaded successfully');
+            console.log('[Firebase] SDK loaded successfully!', firebase.SDK_VERSION);
             return true;
         }
-        console.log(`Waiting for Firebase SDK... attempt ${i + 1}/${maxAttempts}`);
+        console.log(`[Firebase] Waiting... attempt ${i + 1}/${maxAttempts}`);
         await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-    console.error('Firebase SDK failed to load after maximum attempts');
+    console.error('[Firebase] SDK failed to load after maximum attempts');
+    console.error('[Firebase] Check that CDN scripts are loading in index.html');
     return false;
 }
 
@@ -41,38 +44,53 @@ async function waitForFirebase(maxAttempts = 20, delayMs = 100) {
  * Initialize Firebase
  */
 export async function initializeFirebase() {
+    console.log('[Firebase] initializeFirebase() called');
+    
     // Already initialized
     if (isInitialized) {
-        console.log('Firebase already initialized');
+        console.log('[Firebase] Already initialized');
         return true;
     }
 
     try {
+        console.log('[Firebase] Starting initialization...');
+        
         // Wait for Firebase SDK to load
         const sdkLoaded = await waitForFirebase();
         if (!sdkLoaded) {
-            console.error('Firebase SDK not available');
+            console.error('[Firebase] SDK not available - cannot initialize');
             return false;
         }
 
         // Initialize Firebase app
+        console.log('[Firebase] Initializing app with config:', {
+            projectId: firebaseConfig.projectId,
+            authDomain: firebaseConfig.authDomain
+        });
+        
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
-            console.log('Firebase app initialized');
+            console.log('[Firebase] App initialized');
+        } else {
+            console.log('[Firebase] App already exists');
         }
 
         // Initialize services
+        console.log('[Firebase] Initializing auth and firestore...');
         auth = firebase.auth();
         db = firebase.firestore();
+        console.log('[Firebase] Services initialized');
 
         // Set up auth state listener
         auth.onAuthStateChanged(handleAuthStateChanged);
+        console.log('[Firebase] Auth state listener attached');
 
         isInitialized = true;
-        console.log('Firebase initialized successfully');
+        console.log('[Firebase] ✅ Initialization complete!');
         return true;
     } catch (error) {
-        console.error('Firebase initialization error:', error);
+        console.error('[Firebase] ❌ Initialization error:', error);
+        console.error('[Firebase] Error stack:', error.stack);
         // Show user-friendly error
         showAuthError('Failed to initialize authentication system. Please refresh the page.');
         return false;

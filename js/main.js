@@ -43,40 +43,57 @@ let appState = {
  * Initialize application
  */
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('SFL Calculator initializing...');
+    console.log('[App] 🚀 SFL Calculator initializing...');
+    console.log('[App] DOM loaded, starting Firebase initialization');
     
     // Initialize Firebase
     const firebaseInitialized = await firebaseAuth.initializeFirebase();
     
     if (!firebaseInitialized) {
-        console.warn('Firebase not initialized - running in localStorage-only mode');
+        console.warn('[App] ⚠️ Firebase not initialized - running in localStorage-only mode');
+    } else {
+        console.log('[App] ✅ Firebase ready');
     }
     
     // Set up event listeners
+    console.log('[App] Setting up event listeners...');
     setupEventListeners();
+    console.log('[App] Event listeners attached');
     
     // Listen for auth state changes
     window.addEventListener('authStateChanged', handleAuthChange);
+    console.log('[App] Auth state change listener registered');
     
     // Listen for auth errors
     window.addEventListener('authError', handleAuthError);
+    console.log('[App] Auth error listener registered');
     
     // Check initial auth state
     if (firebaseAuth.isSignedIn()) {
+        console.log('[App] User already signed in');
         await handleUserSignedIn();
     } else {
+        console.log('[App] No user signed in, showing landing screen');
         showScreen('landing');
     }
+    
+    console.log('[App] ✅ Initialization complete!');
 });
 
 /**
  * Set up all event listeners
  */
 function setupEventListeners() {
+    console.log('[App] setupEventListeners() called');
+    
     // Authentication buttons
     const googleSigninBtn = document.getElementById('google-signin-btn');
+    console.log('[App] Google sign-in button:', googleSigninBtn);
     if (googleSigninBtn) {
         googleSigninBtn.addEventListener('click', handleGoogleSignIn);
+        console.log('[App] Google sign-in listener attached');
+    } else {
+        console.warn('[App] Google sign-in button not found!');
     }
     
     const anonymousSigninBtn = document.getElementById('anonymous-signin-btn');
@@ -223,16 +240,23 @@ function handleAuthError(event) {
  * Handle Google sign-in
  */
 async function handleGoogleSignIn() {
+    console.log('[Auth] 🖱️ Google sign-in button clicked!');
     const button = document.getElementById('google-signin-btn');
     
     try {
+        console.log('[Auth] Setting button loading state...');
         setButtonLoading(button, true);
+        
+        console.log('[Auth] Calling signInWithGoogle()...');
         await firebaseAuth.signInWithGoogle();
+        
+        console.log('[Auth] Google sign-in succeeded');
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
-        console.error('Google sign-in failed:', error);
+        console.error('[Auth] ❌ Google sign-in failed:', error);
         showAuthErrorMessage(error.message);
     } finally {
+        console.log('[Auth] Removing button loading state');
         setButtonLoading(button, false);
     }
 }
