@@ -79,21 +79,32 @@ body {
 }
 
 .landing-header {
-    position: relative;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-bg-card);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
     margin-bottom: var(--spacing-xxl);
-    padding-top: 60px; /* Space for absolute positioned buttons */
+}
+
+.header-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .landing-header h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     color: var(--color-primary);
-    margin-bottom: var(--spacing-sm);
+    margin: 0;
 }
 
 .subtitle {
     color: var(--color-text-secondary);
-    font-size: 1rem;
+    font-size: 0.9rem;
+    margin: 0;
 }
 
 .connection-card {
@@ -721,12 +732,10 @@ body {
 
 /* Header actions container (for refresh + profile buttons) */
 .header-actions {
-    position: absolute;
-    top: var(--spacing-md);
-    right: var(--spacing-md);
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .header-actions .profile-icon-container {
