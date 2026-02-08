@@ -46,13 +46,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[App] 🚀 SFL Calculator initializing...');
     console.log('[App] DOM loaded, starting Firebase initialization');
     
+    // Show debug status
+    const debugStatus = document.getElementById('debug-status');
+    const debugText = document.getElementById('debug-text');
+    if (debugStatus) {
+        debugStatus.style.display = 'block';
+        debugText.textContent = 'JavaScript loaded ✓ Initializing Firebase...';
+    }
+    
     // Initialize Firebase
     const firebaseInitialized = await firebaseAuth.initializeFirebase();
     
     if (!firebaseInitialized) {
         console.warn('[App] ⚠️ Firebase not initialized - running in localStorage-only mode');
+        if (debugText) debugText.textContent = '⚠️ Firebase unavailable - using local storage only';
     } else {
         console.log('[App] ✅ Firebase ready');
+        if (debugText) debugText.textContent = '✅ Firebase ready - you can sign in!';
     }
     
     // Set up event listeners
