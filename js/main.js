@@ -654,7 +654,7 @@ async function handleUserSignedIn() {
         const credentials = await firebaseAuth.loadFarmCredentials();
         
         if (credentials && credentials.farmId && credentials.apiKey) {
-            console.log('[App] Found saved credentials, auto-connecting to farm', credentials.farmId);
+            console.log('[App] Found saved credentials for farm', credentials.farmId);
             
             // Show refresh button on landing
             const refreshBtnLanding = document.getElementById('refresh-btn-landing');
@@ -662,9 +662,42 @@ async function handleUserSignedIn() {
                 refreshBtnLanding.style.display = 'block';
             }
             
-            // Auto-connect with saved credentials
-            updateLandingStatus('Connecting to your farm...');
-            await connectFarm(credentials.farmId, credentials.apiKey);
+            // Try to load cached calculator results from Firebase
+            updateLandingStatus('Loading your saved data...');
+            const cachedResults = await loadAllResultsFromFirebase();
+            
+            if (cachedResults) {
+                console.log('[App] Found cached data, displaying dashboard');
+                
+                // Load other cached data from localStorage
+                const prices = storage.loadPrices();
+                const farmData = storage.loadFarmData();
+                const detectedItems = storage.loadDetectedItems();
+                const boosts = storage.loadBoosts();
+                
+                // Update app state with cached data
+                appState = {
+                    isConnected: true,
+                    farmId: credentials.farmId,
+                    apiKey: credentials.apiKey,
+                    prices: prices,
+                    farmData: farmData,
+                    detectedItems: detectedItems,
+                    boosts: boosts,
+                    results: cachedResults,
+                    currentCalculator: 'cows',
+                };
+                
+                // Show dashboard with cached data
+                updateLandingStatus('Dashboard ready!');
+                showDashboard();
+            } else {
+                console.log('[App] No cached data found, fetching fresh data from API');
+                
+                // No cached data, fetch fresh from API
+                updateLandingStatus('Connecting to your farm...');
+                await connectFarm(credentials.farmId, credentials.apiKey);
+            }
         } else {
             console.log('[App] No saved credentials found, showing setup modal');
             updateLandingStatus('Ready to connect your farm!');
@@ -914,6 +947,43 @@ async function handleConnectSubmit(e) {
     }
     
     await connectFarm(farmId, apiKey);
+}
+
+/**
+ * Load all calculator results from Firebase
+ * Returns null if no data exists or user not signed in
+ */
+async function loadAllResultsFromFirebase() {
+    if (!firebaseAuth.isSignedIn()) {
+        return null;
+    }
+    
+    try {
+        console.log('Loading calculator results from Firebase...');
+        const results = {};
+        let hasAnyData = false;
+        
+        // Load results for each calculator type
+        for (const name of Object.keys(CALCULATORS)) {
+            const data = await firebaseAuth.loadCalculatorResults(name);
+            if (data) {
+                results[name] = data;
+                hasAnyData = true;
+                console.log(`✅ Loaded ${name} results from Firebase`);
+            }
+        }
+        
+        if (!hasAnyData) {
+            console.log('No cached results found in Firebase');
+            return null;
+        }
+        
+        console.log('✅ All calculator results loaded from Firebase');
+        return results;
+    } catch (error) {
+        console.error('Error loading results from Firebase:', error);
+        return null;
+    }
 }
 
 /**
