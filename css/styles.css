@@ -82,6 +82,7 @@ body {
     position: relative;
     text-align: center;
     margin-bottom: var(--spacing-xxl);
+    padding-top: 60px; /* Space for absolute positioned buttons */
 }
 
 .landing-header h1 {
