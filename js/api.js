@@ -13,10 +13,14 @@ const CACHE_DURATION = {
     farm: 5 * 60 * 1000, // 5 minutes (can refresh more frequently)
 };
 
-// CORS proxy to bypass browser CORS restrictions
-// Note: This is necessary because the APIs don't allow direct browser requests from GitHub Pages
-// Using allorigins.win which is more reliable than corsproxy.io
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// Try multiple CORS proxies in order of preference
+const CORS_PROXIES = [
+    'https://corsproxy.io/?',
+    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://api.allorigins.win/raw?url=',
+];
+
+let currentProxyIndex = 0;
 
 /**
  * Build URL with CORS proxy if needed
@@ -24,7 +28,16 @@ const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
  * @returns {string} Proxied URL
  */
 function proxifyUrl(url) {
-    return CORS_PROXY + encodeURIComponent(url);
+    const proxy = CORS_PROXIES[currentProxyIndex];
+    return proxy + encodeURIComponent(url);
+}
+
+/**
+ * Try next CORS proxy in the list
+ */
+function tryNextProxy() {
+    currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
+    console.log(`Switching to proxy: ${CORS_PROXIES[currentProxyIndex]}`);
 }
 
 /**
@@ -41,6 +54,22 @@ export async function fetchP2PPrices() {
         }
 
         console.log('Fetching fresh price data from sfl.world...');
+        
+        // STEP 1: Try direct request first
+        try {
+            const directResponse = await fetch(API_ENDPOINTS.prices);
+            
+            if (directResponse.ok) {
+                const prices = await directResponse.json();
+                setCachedData('prices', prices, CACHE_DURATION.prices);
+                console.log(`✅ Fetched ${Object.keys(prices).length} item prices (direct)`);
+                return prices;
+            }
+        } catch (directError) {
+            console.log('Direct price request failed, trying proxy...', directError.message);
+        }
+        
+        // STEP 2: Try with proxy if direct failed
         const response = await fetch(proxifyUrl(API_ENDPOINTS.prices));
         
         if (!response.ok) {
@@ -52,7 +81,7 @@ export async function fetchP2PPrices() {
         // Cache the results
         setCachedData('prices', prices, CACHE_DURATION.prices);
         
-        console.log(`Fetched ${Object.keys(prices).length} item prices`);
+        console.log(`✅ Fetched ${Object.keys(prices).length} item prices (via proxy)`);
         return prices;
         
     } catch (error) {
@@ -102,25 +131,72 @@ export async function fetchFarmData(farmId, apiKey) {
         console.log(`Fetching farm data for farm ${farmId}...`);
         const url = `${API_ENDPOINTS.farm}/${farmId}`;
         
-        const response = await fetch(proxifyUrl(url), {
-            method: 'GET',
-            headers: {
-                'x-api-key': apiKey,
-                'Content-Type': 'application/json',
-            },
-        });
+        // STEP 1: Try direct request first (API might support CORS natively)
+        console.log('Attempting direct API request...');
+        try {
+            const directResponse = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        if (!response.ok) {
-            await handleFarmAPIError(response);
+            if (directResponse.ok) {
+                const farmData = await directResponse.json();
+                setCachedData(cacheKey, farmData, CACHE_DURATION.farm);
+                console.log('✅ Farm data fetched successfully (direct)');
+                return farmData;
+            } else {
+                await handleFarmAPIError(directResponse);
+            }
+        } catch (directError) {
+            console.log('Direct request failed (likely CORS), trying proxies...', directError.message);
         }
+        
+        // STEP 2: Try with CORS proxies as fallback
+        let lastError = null;
+        const maxProxyRetries = CORS_PROXIES.length;
+        
+        for (let i = 0; i < maxProxyRetries; i++) {
+            try {
+                console.log(`Trying proxy ${i + 1}/${maxProxyRetries}: ${CORS_PROXIES[currentProxyIndex]}`);
+                const response = await fetch(proxifyUrl(url), {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': apiKey,
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-        const farmData = await response.json();
+                if (!response.ok) {
+                    await handleFarmAPIError(response);
+                }
+
+                const farmData = await response.json();
+                
+                // Cache the results
+                setCachedData(cacheKey, farmData, CACHE_DURATION.farm);
+                
+                console.log('✅ Farm data fetched successfully via proxy');
+                return farmData;
+                
+            } catch (error) {
+                console.warn(`❌ Proxy attempt ${i + 1}/${maxProxyRetries} failed:`, error.message);
+                lastError = error;
+                
+                // If not the last attempt, try next proxy
+                if (i < maxProxyRetries - 1) {
+                    tryNextProxy();
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay before retry
+                }
+            }
+        }
         
-        // Cache the results
-        setCachedData(cacheKey, farmData, CACHE_DURATION.farm);
-        
-        console.log('Farm data fetched successfully');
-        return farmData;
+        // All proxies failed
+        console.error('All proxy attempts exhausted');
+        const errorMsg = 'Unable to connect to Sunflower Land API. Tried direct connection and multiple CORS proxies. This may be due to: (1) Network/firewall restrictions, (2) API temporarily unavailable, (3) CORS proxy limitations with custom headers. Please try again later or check your network settings.';
+        throw new Error(errorMsg);
         
     } catch (error) {
         console.error('Error fetching farm data:', error);
