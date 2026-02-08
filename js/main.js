@@ -964,6 +964,13 @@ async function connectFarm(farmId, apiKey, retryCount = 0) {
         showScreen('loading');
         updateLoadingStep('step-prices', 'loading');
         
+        // Reset loading status message
+        const loadingStatus = document.getElementById('loading-status');
+        if (loadingStatus) {
+            loadingStatus.textContent = 'Fetching farm data...';
+            loadingStatus.style.color = '';
+        }
+        
         console.log('Starting connection process...');
         console.log('Farm ID:', farmId);
         console.log('API Key length:', apiKey.length);
@@ -1032,11 +1039,21 @@ async function connectFarm(farmId, apiKey, retryCount = 0) {
             const waitTime = 15;
             console.log(`⏳ Rate limit hit. Waiting ${waitTime} seconds before retry ${retryCount + 1}/3...`);
             
-            // Show user-friendly message
-            showError(`Rate limit reached. Automatically retrying in ${waitTime} seconds... (Attempt ${retryCount + 1}/3)`);
+            // Update loading screen message
+            const loadingStatus = document.getElementById('loading-status');
+            if (loadingStatus) {
+                loadingStatus.textContent = `⏳ Rate limit error; waiting ${waitTime} seconds and retrying (${retryCount + 1}/3)...`;
+                loadingStatus.style.color = '#ff9800';
+            }
             
             // Wait 15 seconds
             await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+            
+            // Reset loading status message
+            if (loadingStatus) {
+                loadingStatus.textContent = 'Retrying connection...';
+                loadingStatus.style.color = '';
+            }
             
             // Retry the connection
             console.log('🔄 Retrying connection...');
