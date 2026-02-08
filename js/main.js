@@ -46,23 +46,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[App] 🚀 SFL Calculator initializing...');
     console.log('[App] DOM loaded, starting Firebase initialization');
     
-    // Show debug status
-    const debugStatus = document.getElementById('debug-status');
-    const debugText = document.getElementById('debug-text');
-    if (debugStatus) {
-        debugStatus.style.display = 'block';
-        debugText.textContent = 'JavaScript loaded ✓ Initializing Firebase...';
-    }
-    
     // Initialize Firebase
     const firebaseInitialized = await firebaseAuth.initializeFirebase();
     
     if (!firebaseInitialized) {
         console.warn('[App] ⚠️ Firebase not initialized - running in localStorage-only mode');
-        if (debugText) debugText.textContent = '⚠️ Firebase unavailable - using local storage only';
     } else {
         console.log('[App] ✅ Firebase ready');
-        if (debugText) debugText.textContent = '✅ Firebase ready - you can sign in!';
     }
     
     // Set up event listeners
@@ -96,27 +86,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupEventListeners() {
     console.log('[App] setupEventListeners() called');
     
-    // Authentication buttons
+    // Profile icon buttons
+    const profileIconBtn = document.getElementById('profile-icon-btn');
+    const profileIconBtnDashboard = document.getElementById('profile-icon-btn-dashboard');
+    
+    if (profileIconBtn) {
+        profileIconBtn.addEventListener('click', toggleProfileDropdown);
+        console.log('[App] Profile icon listener attached (landing)');
+    }
+    
+    if (profileIconBtnDashboard) {
+        profileIconBtnDashboard.addEventListener('click', toggleProfileDropdownDashboard);
+        console.log('[App] Profile icon listener attached (dashboard)');
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('profile-dropdown');
+        const dropdownDashboard = document.getElementById('profile-dropdown-dashboard');
+        const iconBtn = document.getElementById('profile-icon-btn');
+        const iconBtnDashboard = document.getElementById('profile-icon-btn-dashboard');
+        
+        if (dropdown && !dropdown.contains(e.target) && e.target !== iconBtn && !iconBtn?.contains(e.target)) {
+            dropdown.style.display = 'none';
+            dropdown.classList.remove('active');
+        }
+        
+        if (dropdownDashboard && !dropdownDashboard.contains(e.target) && e.target !== iconBtnDashboard && !iconBtnDashboard?.contains(e.target)) {
+            dropdownDashboard.style.display = 'none';
+            dropdownDashboard.classList.remove('active');
+        }
+    });
+    
+    // Login modal
+    const closeLoginModal = document.getElementById('close-login-modal');
+    if (closeLoginModal) {
+        closeLoginModal.addEventListener('click', hideLoginModal);
+    }
+    
+    // Close modal when clicking outside
+    const loginModal = document.getElementById('login-modal');
+    if (loginModal) {
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) {
+                hideLoginModal();
+            }
+        });
+    }
+    
+    // Authentication buttons in modal
     const googleSigninBtn = document.getElementById('google-signin-btn');
-    console.log('[App] Google sign-in button:', googleSigninBtn);
     if (googleSigninBtn) {
         googleSigninBtn.addEventListener('click', handleGoogleSignIn);
         console.log('[App] Google sign-in listener attached');
-    } else {
-        console.warn('[App] Google sign-in button not found!');
-    }
-    
-    const anonymousSigninBtn = document.getElementById('anonymous-signin-btn');
-    if (anonymousSigninBtn) {
-        anonymousSigninBtn.addEventListener('click', handleAnonymousSignIn);
-    }
-    
-    const showEmailLogin = document.getElementById('show-email-login');
-    if (showEmailLogin) {
-        showEmailLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('email-login-form').style.display = 'block';
-        });
     }
     
     const emailSigninBtn = document.getElementById('email-signin-btn');
@@ -194,6 +216,156 @@ function setupEventListeners() {
 }
 
 /**
+ * Toggle profile dropdown (landing page)
+ */
+function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    const isVisible = dropdown.style.display === 'block';
+    
+    if (isVisible) {
+        dropdown.style.display = 'none';
+        dropdown.classList.remove('active');
+    } else {
+        updateProfileDropdown();
+        dropdown.style.display = 'block';
+        dropdown.classList.add('active');
+    }
+}
+
+/**
+ * Toggle profile dropdown (dashboard)
+ */
+function toggleProfileDropdownDashboard() {
+    const dropdown = document.getElementById('profile-dropdown-dashboard');
+    const isVisible = dropdown.style.display === 'block';
+    
+    if (isVisible) {
+        dropdown.style.display = 'none';
+        dropdown.classList.remove('active');
+    } else {
+        updateProfileDropdownDashboard();
+        dropdown.style.display = 'block';
+        dropdown.classList.add('active');
+    }
+}
+
+/**
+ * Update profile dropdown content (landing)
+ */
+function updateProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    const user = firebaseAuth.getCurrentUser();
+    
+    if (user) {
+        // User is signed in
+        const displayName = user.email || (user.isAnonymous ? 'Anonymous User' : 'User');
+        dropdown.innerHTML = `
+            <div class="dropdown-user-info">
+                <div class="dropdown-user-label">Signed in as</div>
+                <div class="dropdown-user-email">${displayName}</div>
+            </div>
+            <button class="dropdown-item" id="dropdown-profile">Profile</button>
+            <button class="dropdown-item" id="dropdown-settings">Settings</button>
+            <button class="dropdown-item danger" id="dropdown-logout">Logout</button>
+        `;
+        
+        // Attach event listeners
+        document.getElementById('dropdown-profile')?.addEventListener('click', () => {
+            alert('Profile page coming soon!');
+            dropdown.style.display = 'none';
+        });
+        
+        document.getElementById('dropdown-settings')?.addEventListener('click', () => {
+            openSettings();
+            dropdown.style.display = 'none';
+        });
+        
+        document.getElementById('dropdown-logout')?.addEventListener('click', () => {
+            handleSignOut();
+            dropdown.style.display = 'none';
+        });
+    } else {
+        // User not signed in
+        dropdown.innerHTML = `
+            <button class="dropdown-item" id="dropdown-login">Login</button>
+        `;
+        
+        document.getElementById('dropdown-login')?.addEventListener('click', () => {
+            showLoginModal();
+            dropdown.style.display = 'none';
+        });
+    }
+}
+
+/**
+ * Update profile dropdown content (dashboard)
+ */
+function updateProfileDropdownDashboard() {
+    const dropdown = document.getElementById('profile-dropdown-dashboard');
+    const user = firebaseAuth.getCurrentUser();
+    
+    if (user) {
+        // User is signed in
+        const displayName = user.email || (user.isAnonymous ? 'Anonymous User' : 'User');
+        dropdown.innerHTML = `
+            <div class="dropdown-user-info">
+                <div class="dropdown-user-label">Signed in as</div>
+                <div class="dropdown-user-email">${displayName}</div>
+            </div>
+            <button class="dropdown-item" id="dropdown-profile-dash">Profile</button>
+            <button class="dropdown-item" id="dropdown-settings-dash">Settings</button>
+            <button class="dropdown-item danger" id="dropdown-logout-dash">Logout</button>
+        `;
+        
+        // Attach event listeners
+        document.getElementById('dropdown-profile-dash')?.addEventListener('click', () => {
+            alert('Profile page coming soon!');
+            dropdown.style.display = 'none';
+        });
+        
+        document.getElementById('dropdown-settings-dash')?.addEventListener('click', () => {
+            openSettings();
+            dropdown.style.display = 'none';
+        });
+        
+        document.getElementById('dropdown-logout-dash')?.addEventListener('click', () => {
+            handleSignOut();
+            dropdown.style.display = 'none';
+        });
+    } else {
+        // User not signed in
+        dropdown.innerHTML = `
+            <button class="dropdown-item" id="dropdown-login-dash">Login</button>
+        `;
+        
+        document.getElementById('dropdown-login-dash')?.addEventListener('click', () => {
+            showLoginModal();
+            dropdown.style.display = 'none';
+        });
+    }
+}
+
+/**
+ * Show login modal
+ */
+function showLoginModal() {
+    const modal = document.getElementById('login-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+/**
+ * Hide login modal
+ */
+function hideLoginModal() {
+    const modal = document.getElementById('login-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
  * Set button loading state
  */
 function setButtonLoading(button, isLoading) {
@@ -261,30 +433,13 @@ async function handleGoogleSignIn() {
         await firebaseAuth.signInWithGoogle();
         
         console.log('[Auth] Google sign-in succeeded');
+        hideLoginModal();
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('[Auth] ❌ Google sign-in failed:', error);
         showAuthErrorMessage(error.message);
     } finally {
         console.log('[Auth] Removing button loading state');
-        setButtonLoading(button, false);
-    }
-}
-
-/**
- * Handle anonymous sign-in
- */
-async function handleAnonymousSignIn() {
-    const button = document.getElementById('anonymous-signin-btn');
-    
-    try {
-        setButtonLoading(button, true);
-        await firebaseAuth.signInAnonymously();
-        // handleUserSignedIn will be called by auth state change listener
-    } catch (error) {
-        console.error('Anonymous sign-in failed:', error);
-        showAuthErrorMessage(error.message);
-    } finally {
         setButtonLoading(button, false);
     }
 }
@@ -305,6 +460,7 @@ async function handleEmailSignIn() {
     try {
         setButtonLoading(button, true);
         await firebaseAuth.signInWithEmail(email, password);
+        hideLoginModal();
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Email sign-in failed:', error);
@@ -335,6 +491,7 @@ async function handleEmailSignUp() {
     try {
         setButtonLoading(button, true);
         await firebaseAuth.createAccount(email, password);
+        hideLoginModal();
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Account creation failed:', error);
@@ -376,18 +533,12 @@ async function handleUserSignedIn() {
     const user = firebaseAuth.getCurrentUser();
     console.log('[App] User signed in, loading data...');
     
-    // Hide auth section
-    const authSection = document.getElementById('auth-section');
-    if (authSection) {
-        authSection.style.display = 'none';
-        console.log('[App] Auth section hidden');
-    }
+    // Update profile dropdowns
+    updateProfileDropdown();
+    updateProfileDropdownDashboard();
     
     // Show success message
     showSignInSuccess(user);
-    
-    // Update UI to show user info
-    updateUserDisplay(user);
     
     // Try to load saved farm credentials from Firebase
     try {
@@ -424,12 +575,6 @@ async function handleUserSignedIn() {
  * Show sign-in success message
  */
 function showSignInSuccess(user) {
-    // Hide debug status
-    const debugStatus = document.getElementById('debug-status');
-    if (debugStatus) {
-        debugStatus.style.display = 'none';
-    }
-    
     // Create or update success message
     let successDiv = document.getElementById('signin-success-message');
     
@@ -459,36 +604,14 @@ function showSignInSuccess(user) {
 function handleUserSignedOut() {
     console.log('[App] User signed out');
     
-    // Show auth section again
-    const authSection = document.getElementById('auth-section');
-    if (authSection) {
-        authSection.style.display = 'block';
-        console.log('[App] Auth section shown');
-    }
-    
-    // Show debug status again
-    const debugStatus = document.getElementById('debug-status');
-    const debugText = document.getElementById('debug-text');
-    if (debugStatus && debugText) {
-        debugStatus.style.display = 'block';
-        debugText.textContent = '✅ Firebase ready - you can sign in!';
-    }
+    // Update profile dropdowns
+    updateProfileDropdown();
+    updateProfileDropdownDashboard();
     
     // Hide success message
     const successDiv = document.getElementById('signin-success-message');
     if (successDiv) {
         successDiv.style.display = 'none';
-    }
-    
-    // Hide user info
-    const userInfo = document.getElementById('user-info');
-    if (userInfo) {
-        userInfo.style.display = 'none';
-    }
-    
-    const signoutBtn = document.getElementById('signout-btn');
-    if (signoutBtn) {
-        signoutBtn.style.display = 'none';
     }
     
     // Clear farm connection form

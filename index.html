@@ -23,47 +23,17 @@
             <header class="landing-header">
                 <h1>🌻 Sunflower Land Farm Calculator</h1>
                 <p class="subtitle">Unified analytics for your farm - cows, sheep, chickens, resources & more</p>
-            </header>
-
-            <!-- Login Section -->
-            <div class="auth-section" id="auth-section">
-                <div class="connection-card">
-                    <h2>Sign In to Save Your Data</h2>
-                    <p class="auth-description">Sign in to automatically save your farm data and calculations across all your devices.</p>
-                    
-                    <!-- Debug status -->
-                    <div id="debug-status" style="background: #e3f2fd; border: 1px solid #2196f3; color: #1565c0; padding: 8px; border-radius: 4px; margin-bottom: 12px; font-size: 0.9em; display: none;">
-                        <strong>Debug:</strong> <span id="debug-text">Initializing...</span>
-                    </div>
-                    
-                    <div class="auth-buttons">
-                        <button id="google-signin-btn" class="btn btn-google">
-                            <span class="icon">🔐</span>
-                            <span>Sign in with Google</span>
-                        </button>
-                        <button id="anonymous-signin-btn" class="btn btn-secondary">
-                            <span class="icon">👤</span>
-                            <span>Continue without account</span>
-                        </button>
-                    </div>
-                    
-                    <p class="auth-note">Or <a href="#" id="show-email-login">sign in with email</a></p>
-                    
-                    <!-- Email login form (hidden by default) -->
-                    <div id="email-login-form" style="display: none;">
-                        <div class="form-group">
-                            <input type="email" id="email-input" placeholder="Email" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="password" id="password-input" placeholder="Password" required>
-                        </div>
-                        <div class="auth-buttons">
-                            <button id="email-signin-btn" class="btn btn-primary">Sign In</button>
-                            <button id="email-signup-btn" class="btn btn-secondary">Create Account</button>
-                        </div>
+                
+                <!-- Profile Icon -->
+                <div class="profile-icon-container">
+                    <button id="profile-icon-btn" class="profile-icon-btn" aria-label="Profile menu">
+                        <span class="profile-icon">👤</span>
+                    </button>
+                    <div id="profile-dropdown" class="profile-dropdown" style="display: none;">
+                        <!-- Content populated by JavaScript -->
                     </div>
                 </div>
-            </div>
+            </header>
 
             <div class="connection-card">
                 <h2>Connect Your Farm</h2>
@@ -156,12 +126,18 @@
                 <h1>🌻 SFL Calculator</h1>
             </div>
             <div class="nav-info">
-                <div class="user-info" id="user-info" style="display: none;">
-                    <img id="user-photo" class="user-photo" src="" alt="User" style="display: none;">
-                    <span id="user-email" class="user-email"></span>
-                </div>
                 <span id="farm-id-display" class="farm-id"></span>
                 <span id="last-updated" class="last-updated"></span>
+                
+                <!-- Profile Icon in Dashboard -->
+                <div class="profile-icon-container">
+                    <button id="profile-icon-btn-dashboard" class="profile-icon-btn" aria-label="Profile menu">
+                        <span class="profile-icon">👤</span>
+                    </button>
+                    <div id="profile-dropdown-dashboard" class="profile-dropdown" style="display: none;">
+                        <!-- Content populated by JavaScript -->
+                    </div>
+                </div>
             </div>
             <div class="nav-actions">
                 <button id="refresh-btn" class="btn btn-secondary" title="Refresh data">
@@ -342,7 +318,40 @@
         </div>
     </div>
 
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal" style="display: none;">
+        <div class="modal-content auth-modal-content">
+            <div class="modal-header">
+                <h2>Sign In</h2>
+                <button class="close-modal" id="close-login-modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="auth-description">Sign in to save your farm data and calculations across all your devices.</p>
+                
+                <button id="google-signin-btn" class="btn btn-google" style="width: 100%; margin-bottom: 12px;">
+                    <span class="icon">🔐</span>
+                    <span>Sign in with Google</span>
+                </button>
+                
+                <div class="divider">or</div>
+                
+                <form id="email-login-form">
+                    <div class="form-group">
+                        <input type="email" id="email-input" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="password-input" placeholder="Password" required>
+                    </div>
+                    <div class="auth-buttons" style="display: flex; gap: 8px;">
+                        <button type="button" id="email-signin-btn" class="btn btn-primary" style="flex: 1;">Sign In</button>
+                        <button type="button" id="email-signup-btn" class="btn btn-secondary" style="flex: 1;">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Modules -->
-    <script type="module" src="js/main.js?v=2.0.1"></script>
+    <script type="module" src="js/main.js?v=2.1.0"></script>
 </body>
 </html>
