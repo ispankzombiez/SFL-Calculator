@@ -1,0 +1,83 @@
+/**
+ * Desktop-specific styles (min-width: 768px)
+ */
+
+@media (min-width: 768px) {
+    /* ===== Desktop Navigation ===== */
+    .top-nav {
+        padding: var(--spacing-lg) var(--spacing-xxl);
+    }
+    
+    .nav-brand h1 {
+        font-size: 1.8rem;
+    }
+    
+    /* ===== Desktop Dashboard Layout ===== */
+    .sidebar {
+        width: 220px;
+        padding: var(--spacing-lg);
+    }
+    
+    .calculator-content {
+        padding: var(--spacing-xxl);
+    }
+    
+    /* ===== Desktop Calculator Content ===== */
+    .calc-header h2 {
+        font-size: 2rem;
+    }
+    
+    /* ===== Desktop Tables ===== */
+    .results-table {
+        font-size: 1rem;
+    }
+    
+    .results-table-container {
+        padding: var(--spacing-xl);
+    }
+    
+    /* ===== Desktop Landing ===== */
+    .landing-header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .connection-card {
+        padding: var(--spacing-xxl);
+    }
+    
+    /* ===== Desktop Modal ===== */
+    .modal-content {
+        width: 600px;
+    }
+}
+
+/* ===== Large Desktop (min-width: 1200px) ===== */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 700px;
+    }
+    
+    .calculator-content {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .sidebar {
+        width: 250px;
+    }
+    
+    .calc-summary {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ===== Extra Large Desktop (min-width: 1600px) ===== */
+@media (min-width: 1600px) {
+    .calculator-content {
+        max-width: 1600px;
+    }
+    
+    .results-table {
+        font-size: 1.05rem;
+    }
+}

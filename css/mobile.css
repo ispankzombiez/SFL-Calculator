@@ -1,0 +1,128 @@
+/**
+ * Mobile-specific styles (max-width: 767px)
+ */
+
+/* ===== Mobile Navigation ===== */
+@media (max-width: 767px) {
+    .top-nav {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .nav-brand h1 {
+        font-size: 1.2rem;
+    }
+    
+    .nav-info {
+        align-items: center;
+    }
+    
+    .nav-actions {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .nav-actions .btn {
+        flex: 1;
+    }
+    
+    .nav-actions .text {
+        display: none;
+    }
+    
+    /* ===== Mobile Dashboard Layout ===== */
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        padding: var(--spacing-sm);
+    }
+    
+    .calculator-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: var(--spacing-xs);
+    }
+    
+    .nav-tab {
+        flex-direction: column;
+        min-width: 80px;
+        padding: var(--spacing-sm);
+        gap: var(--spacing-xs);
+    }
+    
+    .nav-tab .label {
+        font-size: 0.8rem;
+    }
+    
+    .nav-tab .icon {
+        font-size: 1.8rem;
+    }
+    
+    /* ===== Mobile Calculator Content ===== */
+    .calculator-content {
+        padding: var(--spacing-md);
+    }
+    
+    .calc-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .calc-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    /* ===== Mobile Tables ===== */
+    .results-table {
+        font-size: 0.85rem;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: var(--spacing-sm);
+    }
+    
+    .results-table-container {
+        padding: var(--spacing-md);
+    }
+    
+    /* ===== Mobile Landing ===== */
+    .landing-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .connection-card {
+        padding: var(--spacing-md);
+    }
+    
+    .security-notice {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    /* ===== Mobile Modal ===== */
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    .settings-section .btn {
+        width: 100%;
+        margin-right: 0;
+    }
+    
+    /* ===== Mobile Forms ===== */
+    .form-group input {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+}

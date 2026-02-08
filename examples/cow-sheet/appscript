@@ -1,0 +1,43 @@
+function getp2p() {
+  var sheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("api");
+  var response2 = UrlFetchApp.fetch("https://sfl.world/api/v1/prices");
+  var data2 = JSON.parse(response2.getContentText());
+  
+  var headers2 = [];
+  var flattenData2 = flattenObject(data2);
+  for (var key2 in flattenData2) {
+    headers2.push(key2);
+  }
+  
+  var headerRange2 = sheet2.getRange(1, 2, 1, headers2.length);
+  headerRange2.setValues([headers2]);
+  
+  var numRows2 = 1;
+  var numCols2 = headers2.length;
+  var dataRange2 = sheet2.getRange(2, 2, numRows2, numCols2);
+  
+  var rowData2 = [];
+  for (var i = 0; i < headers2.length; i++) {
+    rowData2.push(flattenData2[headers2[i]]);
+  }
+  
+  dataRange2.setValues([rowData2]);
+}
+
+
+function flattenObject(obj, prefix) {
+  var result = {};
+  prefix = prefix || "";
+  for (var key in obj) {
+    var propName = prefix + key;
+    if (typeof obj[key] === "object") {
+      var flattened = flattenObject(obj[key], propName + ".");
+      for (var flatKey in flattened) {
+        result[flatKey] = flattened[flatKey];
+      }
+    } else {
+      result[propName] = obj[key];
+    }
+  }
+  return result;
+}

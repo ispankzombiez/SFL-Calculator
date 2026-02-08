@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunflower Land - Unified Farm Calculator</title>
+    <meta name="description" content="Comprehensive calculator for Sunflower Land farms - analyze cows, sheep, chickens, resources, cooking, and greenhouse efficiency">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mobile.css" media="(max-width: 767px)">
+    <link rel="stylesheet" href="css/desktop.css" media="(min-width: 768px)">
+</head>
+<body>
+    <!-- Landing Screen (Initial State) -->
+    <div id="landing-screen" class="screen active">
+        <div class="container">
+            <header class="landing-header">
+                <h1>🌻 Sunflower Land Farm Calculator</h1>
+                <p class="subtitle">Unified analytics for your farm - cows, sheep, chickens, resources & more</p>
+            </header>
+
+            <div class="connection-card">
+                <h2>Connect Your Farm</h2>
+                
+                <div class="security-notice">
+                    <span class="icon">🔒</span>
+                    <p>Your API key is stored locally in your browser only. It's never transmitted to any server except the official Sunflower Land API.</p>
+                </div>
+
+                <form id="connect-form" class="connect-form">
+                    <div class="form-group">
+                        <label for="farm-id">Farm ID</label>
+                        <input 
+                            type="text" 
+                            id="farm-id" 
+                            name="farmId" 
+                            placeholder="e.g., 12345"
+                            required
+                            autocomplete="off"
+                        >
+                        <small>Your numeric farm identifier</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="api-key">API Key</label>
+                        <input 
+                            type="password" 
+                            id="api-key" 
+                            name="apiKey" 
+                            placeholder="sfl.xxxxx..."
+                            required
+                            autocomplete="off"
+                        >
+                        <small>Your personal Sunflower Land API key (starts with "sfl.")</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="connect-btn">
+                            <span class="btn-text">Connect Farm</span>
+                            <span class="btn-loader" style="display: none;">⏳ Connecting...</span>
+                        </button>
+                    </div>
+                </form>
+
+                <div id="error-message" class="error-message" style="display: none;"></div>
+            </div>
+
+            <footer class="landing-footer">
+                <p>Need help? Check the <a href="https://github.com/calebadrian/SFL-Calculator" target="_blank">documentation</a></p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen">
+        <div class="loader-container">
+            <div class="spinner"></div>
+            <p id="loading-status">Fetching farm data...</p>
+            <div class="loading-steps">
+                <div class="step" id="step-prices">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Loading market prices</span>
+                </div>
+                <div class="step" id="step-farm">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Fetching farm data</span>
+                </div>
+                <div class="step" id="step-items">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Detecting items & boosts</span>
+                </div>
+                <div class="step" id="step-calc">
+                    <span class="step-icon">⏳</span>
+                    <span class="step-text">Running calculations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboard-screen" class="screen">
+        <!-- Top Navigation Bar -->
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <h1>🌻 SFL Calculator</h1>
+            </div>
+            <div class="nav-info">
+                <span id="farm-id-display" class="farm-id"></span>
+                <span id="last-updated" class="last-updated"></span>
+            </div>
+            <div class="nav-actions">
+                <button id="refresh-btn" class="btn btn-secondary" title="Refresh data">
+                    <span class="icon">🔄</span>
+                    <span class="text">Refresh</span>
+                </button>
+                <button id="settings-btn" class="btn btn-secondary" title="Settings">
+                    <span class="icon">⚙️</span>
+                    <span class="text">Settings</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Sidebar/Tabs Navigation -->
+            <aside class="sidebar">
+                <nav class="calculator-nav">
+                    <button class="nav-tab active" data-calculator="cows">
+                        <span class="icon">🐄</span>
+                        <span class="label">Cows</span>
+                    </button>
+                    <button class="nav-tab" data-calculator="sheep">
+                        <span class="icon">🐑</span>
+                        <span class="label">Sheep</span>
+                    </button>
+                    <button class="nav-tab" data-calculator="chickens">
+                        <span class="icon">🐔</span>
+                        <span class="label">Chickens</span>
+                    </button>
+                    <button class="nav-tab" data-calculator="resources">
+                        <span class="icon">⛏️</span>
+                        <span class="label">Resources</span>
+                    </button>
+                    <button class="nav-tab" data-calculator="cooking">
+                        <span class="icon">🍳</span>
+                        <span class="label">Cooking</span>
+                    </button>
+                    <button class="nav-tab" data-calculator="greenhouse">
+                        <span class="icon">🌿</span>
+                        <span class="label">Greenhouse</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="calculator-content">
+                <!-- Calculator views will be dynamically loaded here -->
+                <div id="calculator-view" class="calculator-view">
+                    <!-- Default: Cows Calculator -->
+                    <div id="calc-cows" class="calc-panel active">
+                        <header class="calc-header">
+                            <h2>🐄 Cow Calculator</h2>
+                            <p>Analyze feeding costs, milk/leather production, and profitability by level</p>
+                        </header>
+                        <div id="cow-results" class="calc-results">
+                            <!-- Results populated by cow.js -->
+                        </div>
+                    </div>
+
+                    <!-- Sheep Calculator -->
+                    <div id="calc-sheep" class="calc-panel">
+                        <header class="calc-header">
+                            <h2>🐑 Sheep Calculator</h2>
+                            <p>Coming soon - wool production and feeding analysis</p>
+                        </header>
+                        <div id="sheep-results" class="calc-results">
+                            <!-- Results populated by sheep.js -->
+                        </div>
+                    </div>
+
+                    <!-- Chickens Calculator -->
+                    <div id="calc-chickens" class="calc-panel">
+                        <header class="calc-header">
+                            <h2>🐔 Chicken Calculator</h2>
+                            <p>Coming soon - egg production and feeding efficiency</p>
+                        </header>
+                        <div id="chickens-results" class="calc-results">
+                            <!-- Results populated by chicken.js -->
+                        </div>
+                    </div>
+
+                    <!-- Resources Calculator -->
+                    <div id="calc-resources" class="calc-panel">
+                        <header class="calc-header">
+                            <h2>⛏️ Resource Calculator</h2>
+                            <p>Coming soon - mining, chopping, and resource analysis</p>
+                        </header>
+                        <div id="resources-results" class="calc-results">
+                            <!-- Results populated by resources.js -->
+                        </div>
+                    </div>
+
+                    <!-- Cooking Calculator -->
+                    <div id="calc-cooking" class="calc-panel">
+                        <header class="calc-header">
+                            <h2>🍳 Cooking Calculator</h2>
+                            <p>Coming soon - recipe time optimization and profit analysis</p>
+                        </header>
+                        <div id="cooking-results" class="calc-results">
+                            <!-- Results populated by cooking.js -->
+                        </div>
+                    </div>
+
+                    <!-- Greenhouse Calculator -->
+                    <div id="calc-greenhouse" class="calc-panel">
+                        <header class="calc-header">
+                            <h2>🌿 Greenhouse Calculator</h2>
+                            <p>Coming soon - greenhouse efficiency and crop optimization</p>
+                        </header>
+                        <div id="greenhouse-results" class="calc-results">
+                            <!-- Results populated by greenhouse.js -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>⚙️ Settings</h2>
+                <button class="modal-close" id="close-settings">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Connection</h3>
+                    <div class="setting-item">
+                        <label>Farm ID:</label>
+                        <span id="settings-farm-id" class="setting-value">-</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>API Key:</label>
+                        <span class="setting-value">••••••••••••••</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Cache</h3>
+                    <div class="setting-item">
+                        <label>Prices cached:</label>
+                        <span id="prices-cache-time" class="setting-value">-</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Farm data cached:</label>
+                        <span id="farm-cache-time" class="setting-value">-</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Actions</h3>
+                    <button id="clear-cache-btn" class="btn btn-secondary">Clear Cache</button>
+                    <button id="disconnect-btn" class="btn btn-danger">Disconnect & Clear All Data</button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Export</h3>
+                    <button id="export-results-btn" class="btn btn-secondary">📥 Export Results (JSON)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

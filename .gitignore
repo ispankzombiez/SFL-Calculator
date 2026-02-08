@@ -1,0 +1,37 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
+# Environment files
+.env
+.env.local
+*api_key*
+*API_KEY*
+
+# Build outputs (if any are added later)
+dist/
+build/
+
+# Node modules (if npm is used later)
+node_modules/
+
+# Personal notes
+notes.txt
+TODO.md
