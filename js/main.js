@@ -170,10 +170,16 @@ function setupEventListeners() {
         signoutBtn.addEventListener('click', handleSignOut);
     }
     
-    // Connect form submission
-    const connectForm = document.getElementById('connect-form');
-    if (connectForm) {
-        connectForm.addEventListener('submit', handleConnectSubmit);
+    // Credentials form submission (setup modal)
+    const credentialsForm = document.getElementById('credentials-form');
+    if (credentialsForm) {
+        credentialsForm.addEventListener('submit', handleCredentialsSubmit);
+    }
+    
+    // Close credentials modal
+    const closeCredentialsModal = document.getElementById('close-credentials-modal');
+    if (closeCredentialsModal) {
+        closeCredentialsModal.addEventListener('click', hideCredentialsModal);
     }
     
     // Calculator navigation tabs
@@ -185,10 +191,15 @@ function setupEventListeners() {
         });
     });
     
-    // Refresh button
+    // Refresh buttons
     const refreshBtn = document.getElementById('refresh-btn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', handleRefresh);
+    }
+    
+    const refreshBtnLanding = document.getElementById('refresh-btn-landing');
+    if (refreshBtnLanding) {
+        refreshBtnLanding.addEventListener('click', handleRefreshFromLanding);
     }
     
     // Settings button
@@ -571,65 +582,185 @@ async function handleUserSignedIn() {
     updateProfileDropdown();
     updateProfileDropdownDashboard();
     
-    // Show success message
-    showSignInSuccess(user);
+    // Show landing status
+    updateLandingStatus('Loading your farm credentials...');
     
     // Try to load saved farm credentials from Firebase
     try {
         const credentials = await firebaseAuth.loadFarmCredentials();
         
         if (credentials && credentials.farmId && credentials.apiKey) {
-            console.log('[App] Found saved credentials in Firebase for farm', credentials.farmId);
+            console.log('[App] Found saved credentials, auto-connecting to farm', credentials.farmId);
             
-            // Pre-fill form
-            const farmIdInput = document.getElementById('farm-id');
-            const apiKeyInput = document.getElementById('api-key');
-            
-            if (farmIdInput && credentials.farmId) {
-                farmIdInput.value = credentials.farmId;
-            }
-            if (apiKeyInput && credentials.apiKey) {
-                apiKeyInput.value = credentials.apiKey;
+            // Show refresh button on landing
+            const refreshBtnLanding = document.getElementById('refresh-btn-landing');
+            if (refreshBtnLanding) {
+                refreshBtnLanding.style.display = 'block';
             }
             
-            console.log('[App] Credentials pre-filled in form');
+            // Auto-connect with saved credentials
+            updateLandingStatus('Connecting to your farm...');
+            await connectFarm(credentials.farmId, credentials.apiKey);
         } else {
-            console.log('[App] No saved credentials found');
+            console.log('[App] No saved credentials found, showing setup modal');
+            updateLandingStatus('Ready to connect your farm!');
+            
+            // Show credentials setup modal
+            showCredentialsModal();
         }
     } catch (error) {
         console.error('[App] Error loading saved credentials:', error);
+        updateLandingStatus('Error loading credentials. Please try again.');
+        
+        // Show credentials setup modal as fallback
+        setTimeout(() => showCredentialsModal(), 1000);
+    }
+}
+
+/**
+ * Update landing page status message
+ */
+function updateLandingStatus(message) {
+    const statusElement = document.getElementById('landing-status');
+    if (statusElement) {
+        statusElement.innerHTML = `<p style="color: #666; font-size: 14px;">${message}</p>`;
+    }
+}
+
+/**
+ * Show credentials setup modal
+ */
+function showCredentialsModal() {
+    const modal = document.getElementById('credentials-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Clear any previous values
+        const farmIdInput = document.getElementById('setup-farm-id');
+        const apiKeyInput = document.getElementById('setup-api-key');
+        if (farmIdInput) farmIdInput.value = '';
+        if (apiKeyInput) apiKeyInput.value = '';
+        
+        // Hide error
+        const errorDiv = document.getElementById('credentials-error');
+        if (errorDiv) errorDiv.style.display = 'none';
+    }
+}
+
+/**
+ * Hide credentials setup modal
+ */
+function hideCredentialsModal() {
+    const modal = document.getElementById('credentials-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Handle credentials form submission
+ */
+async function handleCredentialsSubmit(e) {
+    e.preventDefault();
+    
+    const farmIdInput = document.getElementById('setup-farm-id');
+    const apiKeyInput = document.getElementById('setup-api-key');
+    const submitBtn = document.getElementById('save-credentials-btn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoader = submitBtn.querySelector('.btn-loader');
+    const errorDiv = document.getElementById('credentials-error');
+    
+    const farmId = farmIdInput.value.trim();
+    const apiKey = apiKeyInput.value.trim();
+    
+    // Validate inputs
+    if (!storage.validateFarmId(farmId)) {
+        errorDiv.textContent = 'Invalid Farm ID. Please enter a numeric farm ID.';
+        errorDiv.style.display = 'block';
+        return;
     }
     
-    // Make sure we're on the landing screen
-    showScreen('landing');
-    console.log('[App] Ready for farm connection');
+    if (!storage.validateApiKey(apiKey)) {
+        errorDiv.textContent = 'Invalid API key. Key should start with "sfl." and be at least 20 characters.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Hide error
+    errorDiv.style.display = 'none';
+    
+    // Show loading state
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline';
+    submitBtn.disabled = true;
+    
+    try {
+        // Save to localStorage
+        storage.saveFarmId(farmId);
+        storage.saveApiKey(apiKey);
+        
+        // Save to Firebase
+        await firebaseAuth.saveFarmCredentials(farmId, apiKey);
+        console.log('Credentials saved to Firebase');
+        
+        // Hide modal
+        hideCredentialsModal();
+        
+        // Show refresh button
+        const refreshBtnLanding = document.getElementById('refresh-btn-landing');
+        if (refreshBtnLanding) {
+            refreshBtnLanding.style.display = 'block';
+        }
+        
+        // Connect to farm
+        await connectFarm(farmId, apiKey);
+        
+    } catch (error) {
+        console.error('Error saving credentials:', error);
+        errorDiv.textContent = error.message || 'Failed to save credentials. Please try again.';
+        errorDiv.style.display = 'block';
+        
+        // Reset button state
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+}
+
+/**
+ * Handle refresh from landing page
+ */
+async function handleRefreshFromLanding() {
+    const refreshBtn = document.getElementById('refresh-btn-landing');
+    if (!refreshBtn) return;
+    
+    // Get saved credentials
+    const farmId = storage.getFarmId();
+    const apiKey = storage.getApiKey();
+    
+    if (!farmId || !apiKey) {
+        showCredentialsModal();
+        return;
+    }
+    
+    // Disable button during refresh
+    refreshBtn.disabled = true;
+    refreshBtn.style.opacity = '0.6';
+    
+    try {
+        await connectFarm(farmId, apiKey);
+    } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.style.opacity = '1';
+    }
 }
 
 /**
  * Show sign-in success message
  */
 function showSignInSuccess(user) {
-    // Create or update success message
-    let successDiv = document.getElementById('signin-success-message');
-    
-    if (!successDiv) {
-        successDiv = document.createElement('div');
-        successDiv.id = 'signin-success-message';
-        successDiv.style.cssText = 'background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 4px; margin-bottom: 20px;';
-        
-        // Insert before the connection card
-        const connectionCard = document.querySelector('.connection-card');
-        if (connectionCard && connectionCard.parentNode) {
-            connectionCard.parentNode.insertBefore(successDiv, connectionCard);
-        }
-    }
-    
-    const displayName = user.email || (user.isAnonymous ? 'Anonymous User' : 'User');
-    successDiv.innerHTML = `
-        <strong>✅ Signed in successfully!</strong><br>
-        <small>Logged in as: ${displayName}</small>
-    `;
-    successDiv.style.display = 'block';
+    // This function is no longer needed but kept for compatibility
+    console.log('User signed in:', user.email || user.uid);
 }
 
 /**
@@ -642,17 +773,14 @@ function handleUserSignedOut() {
     updateProfileDropdown();
     updateProfileDropdownDashboard();
     
-    // Hide success message
-    const successDiv = document.getElementById('signin-success-message');
-    if (successDiv) {
-        successDiv.style.display = 'none';
+    // Hide refresh button on landing
+    const refreshBtnLanding = document.getElementById('refresh-btn-landing');
+    if (refreshBtnLanding) {
+        refreshBtnLanding.style.display = 'none';
     }
     
-    // Clear farm connection form
-    const farmIdInput = document.getElementById('farm-id');
-    const apiKeyInput = document.getElementById('api-key');
-    if (farmIdInput) farmIdInput.value = '';
-    if (apiKeyInput) apiKeyInput.value = '';
+    // Update landing status
+    updateLandingStatus('👆 Click the profile icon above to sign in');
     
     // Show landing screen
     showScreen('landing');

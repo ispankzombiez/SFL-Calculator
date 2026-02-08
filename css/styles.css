@@ -687,6 +687,36 @@ body {
     transform: scale(0.95);
 }
 
+/* Icon button (for refresh, etc) */
+.icon-btn {
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0;
+}
+
+.icon-btn:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    transform: scale(1.05);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+.icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .landing-header .profile-icon-container {
     position: absolute;
     top: var(--spacing-md);

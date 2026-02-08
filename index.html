@@ -24,66 +24,30 @@
                 <h1>🌻 Sunflower Land Farm Calculator</h1>
                 <p class="subtitle">Unified analytics for your farm - cows, sheep, chickens, resources & more</p>
                 
-                <!-- Profile Icon -->
-                <div class="profile-icon-container">
-                    <button id="profile-icon-btn" class="profile-icon-btn" aria-label="Profile menu">
-                        <span class="profile-icon">👤</span>
+                <!-- Top Right Actions -->
+                <div class="header-actions" style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; align-items: center;">
+                    <button id="refresh-btn-landing" class="icon-btn" title="Refresh data" style="display: none;">
+                        <span style="font-size: 20px;">🔄</span>
                     </button>
-                    <div id="profile-dropdown" class="profile-dropdown" style="display: none;">
-                        <!-- Content populated by JavaScript -->
+                    <div class="profile-icon-container">
+                        <button id="profile-icon-btn" class="profile-icon-btn" aria-label="Profile menu">
+                            <span class="profile-icon">👤</span>
+                        </button>
+                        <div id="profile-dropdown" class="profile-dropdown" style="display: none;">
+                            <!-- Content populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <div class="connection-card">
-                <h2>Connect Your Farm</h2>
+            <div class="welcome-card" style="max-width: 600px; margin: 40px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
+                <div style="font-size: 64px; margin-bottom: 20px;">🌻</div>
+                <h2 style="margin-bottom: 16px;">Welcome to SFL Calculator</h2>
+                <p style="color: #666; margin-bottom: 24px;">Sign in to connect your farm and start analyzing your production efficiency, profitability, and optimize your farming strategy.</p>
                 
-                <div class="security-notice">
-                    <span class="icon">🔒</span>
-                    <p>Your API key is stored locally in your browser only. It's never transmitted to any server except the official Sunflower Land API.</p>
+                <div id="landing-status" style="padding: 16px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
+                    <p style="color: #666; font-size: 14px;">👆 Click the profile icon above to sign in</p>
                 </div>
-
-                <div class="security-notice" style="background: #fff3cd; border-color: #ffc107;">
-                    <span class="icon">ℹ️</span>
-                    <p><strong>CORS Proxy:</strong> This site uses a CORS proxy (corsproxy.io) to access the APIs from your browser. Your API key is transmitted through this proxy to reach the Sunflower Land API.</p>
-                </div>
-
-                <form id="connect-form" class="connect-form">
-                    <div class="form-group">
-                        <label for="farm-id">Farm ID</label>
-                        <input 
-                            type="text" 
-                            id="farm-id" 
-                            name="farmId" 
-                            placeholder="e.g., 12345"
-                            required
-                            autocomplete="off"
-                        >
-                        <small>Your numeric farm identifier</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="api-key">API Key</label>
-                        <input 
-                            type="password" 
-                            id="api-key" 
-                            name="apiKey" 
-                            placeholder="sfl.xxxxx..."
-                            required
-                            autocomplete="off"
-                        >
-                        <small>Your personal Sunflower Land API key (starts with "sfl.")</small>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="connect-btn">
-                            <span class="btn-text">Connect Farm</span>
-                            <span class="btn-loader" style="display: none;">⏳ Connecting...</span>
-                        </button>
-                    </div>
-                </form>
-
-                <div id="error-message" class="error-message" style="display: none;"></div>
             </div>
 
             <footer class="landing-footer">
@@ -354,7 +318,58 @@
         </div>
     </div>
 
+    <!-- Farm Credentials Setup Modal -->
+    <div id="credentials-modal" class="modal" style="display: none;">
+        <div class="modal-content auth-modal-content">
+            <div class="modal-header">
+                <h2>Connect Your Farm</h2>
+                <button class="close-modal" id="close-credentials-modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="auth-description">Enter your farm credentials to start analyzing your production data.</p>
+                
+                <div class="security-notice" style="background: #e3f2fd; border: 1px solid #2196f3; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+                    <span style="font-size: 20px;">🔒</span>
+                    <p style="margin: 8px 0 0 0; font-size: 13px; color: #0d47a1;">Your credentials are securely stored in your Firebase account and only used to fetch your farm data.</p>
+                </div>
+                
+                <form id="credentials-form">
+                    <div class="form-group">
+                        <label for="setup-farm-id">Farm ID</label>
+                        <input 
+                            type="text" 
+                            id="setup-farm-id" 
+                            placeholder="e.g., 1128976301583508"
+                            required
+                            autocomplete="off"
+                        >
+                        <small>Your numeric farm identifier from Sunflower Land</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="setup-api-key">API Key</label>
+                        <input 
+                            type="password" 
+                            id="setup-api-key" 
+                            placeholder="sfl.xxxxx..."
+                            required
+                            autocomplete="off"
+                        >
+                        <small>Your personal API key (starts with "sfl.")</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="save-credentials-btn" style="width: 100%;">
+                        <span class="btn-text">Save & Connect</span>
+                        <span class="btn-loader" style="display: none;">⏳ Connecting...</span>
+                    </button>
+                </form>
+                
+                <div id="credentials-error" class="error-message" style="display: none; margin-top: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript Modules -->
-    <script type="module" src="js/main.js?v=2.2.0"></script>
+    <script type="module" src="js/main.js?v=2.3.0"></script>
 </body>
 </html>
