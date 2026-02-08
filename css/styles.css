@@ -222,6 +222,10 @@ body {
     padding: var(--spacing-md);
     border-radius: var(--border-radius);
     margin-top: var(--spacing-lg);
+    max-height: 300px;
+    overflow-y: auto;
+    word-wrap: break-word;
+    line-height: 1.5;
 }
 
 /* ===== Loading Screen ===== */

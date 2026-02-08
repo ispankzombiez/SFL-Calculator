@@ -57,7 +57,11 @@ export async function fetchP2PPrices() {
             console.error('Fallback prices also unavailable:', fallbackError);
         }
         
-        throw new Error('Unable to fetch market prices. Please check your internet connection.');
+        // Provide more specific error message
+        if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+            throw new Error('Unable to fetch market prices. This could be due to: network issues, CORS restrictions, or the sfl.world API being temporarily unavailable. Using fallback prices if available.');
+        }
+        throw new Error(`Market prices error: ${error.message}`);
     }
 }
 
@@ -106,6 +110,11 @@ export async function fetchFarmData(farmId, apiKey) {
         
     } catch (error) {
         console.error('Error fetching farm data:', error);
+        
+        // Provide more specific error message for fetch failures
+        if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+            throw new Error('Unable to connect to Sunflower Land API. Please check: (1) Your internet connection, (2) Your API key is valid, (3) The Sunflower Land API is accessible. Note: Some browsers/networks may block this request due to CORS policies.');
+        }
         throw error;
     }
 }

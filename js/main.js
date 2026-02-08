@@ -161,6 +161,10 @@ async function connectFarm(farmId, apiKey) {
         showScreen('loading');
         updateLoadingStep('step-prices', 'loading');
         
+        console.log('Starting connection process...');
+        console.log('Farm ID:', farmId);
+        console.log('API Key length:', apiKey.length);
+        
         // Fetch all data
         const { prices, farmData } = await api.fetchAllData(farmId, apiKey);
         
@@ -207,8 +211,22 @@ async function connectFarm(farmId, apiKey) {
         
     } catch (error) {
         console.error('Connection error:', error);
-        showError(error.message);
+        console.error('Error details:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+        
+        // Show detailed error to user
+        const errorMsg = error.message || 'An unknown error occurred. Please check the browser console for details.';
+        showError(errorMsg);
         showScreen('landing');
+        
+        // Reset loading steps
+        updateLoadingStep('step-prices', 'error');
+        updateLoadingStep('step-farm', 'error');
+        updateLoadingStep('step-items', 'error');
+        updateLoadingStep('step-calc', 'error');
     }
 }
 
