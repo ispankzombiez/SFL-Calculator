@@ -662,42 +662,9 @@ async function handleUserSignedIn() {
                 refreshBtnLanding.style.display = 'block';
             }
             
-            // Try to load cached calculator results from Firebase
-            updateLandingStatus('Loading your saved data...');
-            const cachedResults = await loadAllResultsFromFirebase();
-            
-            if (cachedResults) {
-                console.log('[App] Found cached data, displaying dashboard');
-                
-                // Load other cached data from localStorage
-                const prices = storage.loadPrices();
-                const farmData = storage.loadFarmData();
-                const detectedItems = storage.loadDetectedItems();
-                const boosts = storage.loadBoosts();
-                
-                // Update app state with cached data
-                appState = {
-                    isConnected: true,
-                    farmId: credentials.farmId,
-                    apiKey: credentials.apiKey,
-                    prices: prices,
-                    farmData: farmData,
-                    detectedItems: detectedItems,
-                    boosts: boosts,
-                    results: cachedResults,
-                    currentCalculator: 'cows',
-                };
-                
-                // Show dashboard with cached data
-                updateLandingStatus('Dashboard ready!');
-                showDashboard();
-            } else {
-                console.log('[App] No cached data found, fetching fresh data from API');
-                
-                // No cached data, fetch fresh from API
-                updateLandingStatus('Connecting to your farm...');
-                await connectFarm(credentials.farmId, credentials.apiKey);
-            }
+            // Auto-connect with saved credentials
+            updateLandingStatus('Connecting to your farm...');
+            await connectFarm(credentials.farmId, credentials.apiKey);
         } else {
             console.log('[App] No saved credentials found, showing setup modal');
             updateLandingStatus('Ready to connect your farm!');
