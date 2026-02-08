@@ -13,6 +13,19 @@ const CACHE_DURATION = {
     farm: 5 * 60 * 1000, // 5 minutes (can refresh more frequently)
 };
 
+// CORS proxy to bypass browser CORS restrictions
+// Note: This is necessary because the APIs don't allow direct browser requests from GitHub Pages
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+/**
+ * Build URL with CORS proxy if needed
+ * @param {string} url - Original URL
+ * @returns {string} Proxied URL
+ */
+function proxifyUrl(url) {
+    return CORS_PROXY + encodeURIComponent(url);
+}
+
 /**
  * Fetch P2P market prices from sfl.world
  * @returns {Promise<Object>} Price map { itemName: price }
@@ -27,7 +40,7 @@ export async function fetchP2PPrices() {
         }
 
         console.log('Fetching fresh price data from sfl.world...');
-        const response = await fetch(API_ENDPOINTS.prices);
+        const response = await fetch(proxifyUrl(API_ENDPOINTS.prices));
         
         if (!response.ok) {
             throw new Error(`Price API returned ${response.status}: ${response.statusText}`);
@@ -88,7 +101,7 @@ export async function fetchFarmData(farmId, apiKey) {
         console.log(`Fetching farm data for farm ${farmId}...`);
         const url = `${API_ENDPOINTS.farm}/${farmId}`;
         
-        const response = await fetch(url, {
+        const response = await fetch(proxifyUrl(url), {
             method: 'GET',
             headers: {
                 'x-api-key': apiKey,

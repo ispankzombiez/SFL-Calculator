@@ -5,9 +5,23 @@
 This calculator stores your Sunflower Land API key **locally in your browser only** using localStorage. The key is:
 
 - ✅ **Never transmitted** to GitHub, our servers, or any third party
-- ✅ **Only sent** to official Sunflower Land API endpoints
+- ⚠️ **Transmitted through a CORS proxy** (corsproxy.io) to reach the Sunflower Land API
+- ✅ **Only used** to authenticate with official Sunflower Land API endpoints
 - ✅ **Obfuscated** using Base64 encoding (not full encryption, as client-side JavaScript is always visible)
 - ✅ **User-controlled** - you can disconnect and clear all data anytime
+
+## CORS Proxy Notice
+
+**Why we need it:** Browsers block direct requests from GitHub Pages to external APIs (CORS policy).
+
+**What it does:** The CORS proxy (corsproxy.io) acts as a middleman that forwards your API requests to the Sunflower Land API.
+
+**Security implications:**
+- Your API key passes through the proxy service
+- The proxy cannot permanently store your key (it's only used for request forwarding)
+- If you're concerned, run the calculator locally (no proxy needed)
+
+**To run without proxy:** See the Local Development section in README.md
 
 ## Important Security Notes
 

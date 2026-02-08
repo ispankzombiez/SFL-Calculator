@@ -25,8 +25,19 @@ A comprehensive web-based calculator for Sunflower Land farms, providing analyti
 
 - **Privacy-First**
   - API key stored locally in your browser only
-  - Never transmitted to any server except official Sunflower Land API
+  - Never transmitted to any server except official Sunflower Land API (via CORS proxy)
   - All calculations performed client-side
+
+## ⚠️ Important: CORS Proxy
+
+Due to browser security (CORS policy), GitHub Pages cannot directly access the Sunflower Land APIs. This calculator uses a CORS proxy service (corsproxy.io) to route API requests. This means:
+
+- ✅ Your API key reaches the official Sunflower Land API
+- ⚠️ Your requests go through the corsproxy.io service
+- 🔒 The proxy cannot store your API key (it's only used for routing)
+- 🔄 If the proxy is down, the calculator won't work
+
+**Alternative:** For maximum security, consider running this calculator locally (see Local Development section) or deploying with a backend service.
 
 ## 🚀 Demo
 
