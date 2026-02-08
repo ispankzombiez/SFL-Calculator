@@ -140,8 +140,6 @@ async function handleFarmAPIError(response) {
             break;
         case 429:
             errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
-            // Implement exponential backoff
-            await new Promise(resolve => setTimeout(resolve, 5000));
             break;
         case 500:
         case 502:

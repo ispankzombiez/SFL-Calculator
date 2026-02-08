@@ -955,8 +955,11 @@ async function loadAllResultsFromFirebase() {
 
 /**
  * Connect to farm and load data
+ * @param {string} farmId - Farm ID
+ * @param {string} apiKey - API Key
+ * @param {number} retryCount - Number of retries attempted (internal use)
  */
-async function connectFarm(farmId, apiKey) {
+async function connectFarm(farmId, apiKey, retryCount = 0) {
     try {
         showScreen('loading');
         updateLoadingStep('step-prices', 'loading');
@@ -1023,6 +1026,22 @@ async function connectFarm(farmId, apiKey) {
             name: error.name,
             stack: error.stack
         });
+        
+        // Check if it's a rate limit error
+        if (error.message.includes('Rate limit exceeded') && retryCount < 3) {
+            const waitTime = 15;
+            console.log(`⏳ Rate limit hit. Waiting ${waitTime} seconds before retry ${retryCount + 1}/3...`);
+            
+            // Show user-friendly message
+            showError(`Rate limit reached. Automatically retrying in ${waitTime} seconds... (Attempt ${retryCount + 1}/3)`);
+            
+            // Wait 15 seconds
+            await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+            
+            // Retry the connection
+            console.log('🔄 Retrying connection...');
+            return await connectFarm(farmId, apiKey, retryCount + 1);
+        }
         
         // Show detailed error to user
         const errorMsg = error.message || 'An unknown error occurred. Please check the browser console for details.';
