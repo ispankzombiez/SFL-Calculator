@@ -15,7 +15,8 @@ const CACHE_DURATION = {
 
 // CORS proxy to bypass browser CORS restrictions
 // Note: This is necessary because the APIs don't allow direct browser requests from GitHub Pages
-const CORS_PROXY = 'https://corsproxy.io/?';
+// Using allorigins.win which is more reliable than corsproxy.io
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 /**
  * Build URL with CORS proxy if needed

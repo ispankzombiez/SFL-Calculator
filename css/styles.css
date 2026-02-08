@@ -584,3 +584,76 @@ body {
 .landing-footer a:hover {
     text-decoration: underline;
 }
+
+/* ===== Authentication UI ===== */
+.auth-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.auth-description {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.btn-google {
+    background: #4285f4;
+    color: white;
+    width: 100%;
+}
+
+.btn-google:hover {
+    background: #3367d6;
+}
+
+.auth-note {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-md);
+}
+
+.auth-note a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.auth-note a:hover {
+    text-decoration: underline;
+}
+
+#email-login-form {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+/* ===== User Display ===== */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--color-bg);
+    border-radius: var(--border-radius-sm);
+}
+
+.user-photo {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary);
+}
+
+.user-email {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+}

@@ -23,6 +23,13 @@ A comprehensive web-based calculator for Sunflower Land farms, providing analyti
   - Desktop optimized layout
   - Touch-friendly controls
 
+- **User Authentication & Cloud Sync** (Optional)
+  - Sign in with Google
+  - Email/password authentication
+  - Anonymous mode for trying without account
+  - Save farm data and calculations to cloud (Firebase)
+  - Access your data from any device
+
 - **Privacy-First**
   - API key stored locally in your browser only
   - Never transmitted to any server except official Sunflower Land API (via CORS proxy)
@@ -49,6 +56,7 @@ To use this calculator, you need:
 
 1. **Farm ID**: Your Sunflower Land farm number (numeric)
 2. **API Key**: Your personal Sunflower Land API key (starts with "sfl.")
+3. **(Optional) Firebase Account**: For saving your data across devices - see [Firebase Setup Guide](FIREBASE_SETUP.md)
 
 ### How to Get Your API Key
 
@@ -56,7 +64,12 @@ To use this calculator, you need:
 
 ## 🔧 Usage
 
-1. **Enter Your Credentials**
+1. **(Optional) Sign In**
+   - Sign in with Google for automatic data syncing
+   - Or continue without an account (uses localStorage only)
+   - See [Firebase Setup Guide](FIREBASE_SETUP.md) to enable authentication
+
+2. **Enter Your Credentials**
    - Input your Farm ID
    - Enter your API Key
    - Click "Connect Farm"
@@ -97,9 +110,14 @@ To use this calculator, you need:
 ### Setup
 
 ```bash
-# Clone the repository
+#Clone the repository
 git clone https://github.com/yourusername/SFL-Calculator.git
 cd SFL-Calculator
+
+# Set up Firebase (optional - for authentication)
+# See FIREBASE_SETUP.md for detailed instructions
+cp js/firebase-config-template.js js/firebase-config.js
+# Edit firebase-config.js with your Firebase credentials
 
 # No build step required - pure static site
 # Simply open index.html in a browser or use a local server
@@ -131,6 +149,8 @@ SFL-Calculator/
 │   ├── api.js              # API integration
 │   ├── storage.js          # localStorage management
 │   ├── item-detector.js    # Item detection & boosts
+│   ├── firebase-auth.js    # Firebase authentication (optional)
+│   ├── firebase-config-template.js  # Firebase config template
 │   └── calculators/
 │       ├── cow.js          # Cow calculator
 │       ├── sheep.js        # Sheep calculator (placeholder)
@@ -140,6 +160,9 @@ SFL-Calculator/
 │       └── greenhouse.js   # Greenhouse calculator (placeholder)
 ├── data/
 │   └── fallback-prices.json # Fallback price data
+├── README.md                # This file
+├── FIREBASE_SETUP.md        # Firebase setup instructions
+├── SECURITY.md              # Security documentation
 └── examples/
     └── cow-sheet/          # Example calculator data
 ```
@@ -165,6 +188,8 @@ This is a personal project, but suggestions and improvements are welcome!
 ## 📝 Roadmap
 
 - [x] Cow Calculator (Level 1-15 feeding analysis)
+- [x] User Authentication (Google, Email, Anonymous)
+- [x] Cloud Data Sync (Firebase Firestore)
 - [ ] Sheep Calculator
 - [ ] Chicken Calculator
 - [ ] Resources Calculator

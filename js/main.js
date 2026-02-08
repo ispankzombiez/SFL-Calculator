@@ -6,6 +6,7 @@
 import * as api from './api.js';
 import * as storage from './storage.js';
 import * as itemDetector from './item-detector.js';
+import * as firebaseAuth from './firebase-auth.js';
 
 // Import calculators
 import * as cowCalc from './calculators/cow.js';
@@ -41,28 +42,68 @@ let appState = {
 /**
  * Initialize application
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('SFL Calculator initializing...');
     
-    // Check if user has saved credentials
-    if (storage.hasCredentials()) {
-        const farmId = storage.getFarmId();
-        const apiKey = storage.getApiKey();
-        
-        console.log('Found saved credentials, auto-connecting...');
-        connectFarm(farmId, apiKey);
-    } else {
-        showScreen('landing');
+    // Initialize Firebase
+    const firebaseInitialized = await firebaseAuth.initializeFirebase();
+    
+    if (!firebaseInitialized) {
+        console.warn('Firebase not initialized - running in localStorage-only mode');
     }
     
     // Set up event listeners
     setupEventListeners();
+    
+    // Listen for auth state changes
+    window.addEventListener('authStateChanged', handleAuthChange);
+    
+    // Check initial auth state
+    if (firebaseAuth.isSignedIn()) {
+        await handleUserSignedIn();
+    } else {
+        showScreen('landing');
+    }
 });
 
 /**
  * Set up all event listeners
  */
 function setupEventListeners() {
+    // Authentication buttons
+    const googleSigninBtn = document.getElementById('google-signin-btn');
+    if (googleSigninBtn) {
+        googleSigninBtn.addEventListener('click', handleGoogleSignIn);
+    }
+    
+    const anonymousSigninBtn = document.getElementById('anonymous-signin-btn');
+    if (anonymousSigninBtn) {
+        anonymousSigninBtn.addEventListener('click', handleAnonymousSignIn);
+    }
+    
+    const showEmailLogin = document.getElementById('show-email-login');
+    if (showEmailLogin) {
+        showEmailLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('email-login-form').style.display = 'block';
+        });
+    }
+    
+    const emailSigninBtn = document.getElementById('email-signin-btn');
+    if (emailSigninBtn) {
+        emailSigninBtn.addEventListener('click', handleEmailSignIn);
+    }
+    
+    const emailSignupBtn = document.getElementById('email-signup-btn');
+    if (emailSignupBtn) {
+        emailSignupBtn.addEventListener('click', handleEmailSignUp);
+    }
+    
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', handleSignOut);
+    }
+    
     // Connect form submission
     const connectForm = document.getElementById('connect-form');
     if (connectForm) {
@@ -123,6 +164,181 @@ function setupEventListeners() {
 }
 
 /**
+ * Handle Google sign-in
+ */
+async function handleGoogleSignIn() {
+    try {
+        await firebaseAuth.signInWithGoogle();
+        // handleUserSignedIn will be called by auth state change listener
+    } catch (error) {
+        console.error('Google sign-in failed:', error);
+        alert(`Sign-in failed: ${error.message}`);
+    }
+}
+
+/**
+ * Handle anonymous sign-in
+ */
+async function handleAnonymousSignIn() {
+    try {
+        await firebaseAuth.signInAnonymously();
+        // handleUserSignedIn will be called by auth state change listener
+    } catch (error) {
+        console.error('Anonymous sign-in failed:', error);
+        alert(`Sign-in failed: ${error.message}`);
+    }
+}
+
+/**
+ * Handle email sign-in
+ */
+async function handleEmailSignIn() {
+    const email = document.getElementById('email-input').value.trim();
+    const password = document.getElementById('password-input').value;
+    
+    if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+    }
+    
+    try {
+        await firebaseAuth.signInWithEmail(email, password);
+        // handleUserSignedIn will be called by auth state change listener
+    } catch (error) {
+        console.error('Email sign-in failed:', error);
+        alert(`Sign-in failed: ${error.message}`);
+    }
+}
+
+/**
+ * Handle email sign-up
+ */
+async function handleEmailSignUp() {
+    const email = document.getElementById('email-input').value.trim();
+    const password = document.getElementById('password-input').value;
+    
+    if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters');
+        return;
+    }
+    
+    try {
+        await firebaseAuth.createAccount(email, password);
+        // handleUserSignedIn will be called by auth state change listener
+    } catch (error) {
+        console.error('Account creation failed:', error);
+        alert(`Account creation failed: ${error.message}`);
+    }
+}
+
+/**
+ * Handle sign-out
+ */
+async function handleSignOut() {
+    if (confirm('Sign out? Your data will remain saved in your account.')) {
+        await firebaseAuth.signOut();
+        // Reset app state
+        appState.isConnected = false;
+        showScreen('landing');
+    }
+}
+
+/**
+ * Handle auth state changes
+ */
+async function handleAuthChange(event) {
+    const { user } = event.detail;
+    
+    if (user) {
+        await handleUserSignedIn();
+    } else {
+        handleUserSignedOut();
+    }
+}
+
+/**
+ * Handle user signed in
+ */
+async function handleUserSignedIn() {
+    const user = firebaseAuth.getCurrentUser();
+    console.log('User signed in, loading data...');
+    
+    // Update UI
+    updateUserDisplay(user);
+    
+    // Try to load saved farm credentials from Firebase
+    try {
+        const credentials = await firebaseAuth.loadFarmCredentials();
+        
+        if (credentials && credentials.farmId && credentials.apiKey) {
+            console.log('Found saved credentials in Firebase for farm', credentials.farmId);
+            
+            // Pre-fill form
+            const farmIdInput = document.getElementById('farm-id');
+            if (farmIdInput) {
+                farmIdInput.value = credentials.farmId;
+            }
+            
+            // Don't auto-connect, let user click Connect button
+            showScreen('landing');
+        } else {
+            // No saved credentials, show connect form
+            showScreen('landing');
+        }
+    } catch (error) {
+        console.error('Error loading saved credentials:', error);
+        showScreen('landing');
+    }
+}
+
+/**
+ * Handle user signed out
+ */
+function handleUserSignedOut() {
+    console.log('User signed out');
+    
+    // Hide user info
+    const userInfo = document.getElementById('user-info');
+    if (userInfo) {
+        userInfo.style.display = 'none';
+    }
+    
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.style.display = 'none';
+    }
+}
+
+/**
+ * Update user display in navigation
+ */
+function updateUserDisplay(user) {
+    const userInfo = document.getElementById('user-info');
+    const userEmail = document.getElementById('user-email');
+    const userPhoto = document.getElementById('user-photo');
+    const signoutBtn = document.getElementById('signout-btn');
+    
+    if (userInfo && userEmail) {
+        userEmail.textContent = user.email || 'Anonymous User';
+        userInfo.style.display = 'flex';
+        
+        if (user.photoURL && userPhoto) {
+            userPhoto.src = user.photoURL;
+            userPhoto.style.display = 'block';
+        }
+        
+        if (signoutBtn) {
+            signoutBtn.style.display = 'inline-flex';
+        }
+    }
+}
+
+/**
  * Handle connect form submission
  */
 async function handleConnectSubmit(e) {
@@ -146,9 +362,20 @@ async function handleConnectSubmit(e) {
     // Clear any previous errors
     hideError();
     
-    // Save credentials and connect
+    // Save credentials to localStorage
     storage.saveFarmId(farmId);
     storage.saveApiKey(apiKey);
+    
+    // Save to Firebase if user is signed in
+    if (firebaseAuth.isSignedIn()) {
+        try {
+            await firebaseAuth.saveFarmCredentials(farmId, apiKey);
+            console.log('Credentials saved to Firebase');
+        } catch (error) {
+            console.error('Failed to save credentials to Firebase:', error);
+            // Non-critical error, continue anyway
+        }
+    }
     
     await connectFarm(farmId, apiKey);
 }
@@ -186,6 +413,13 @@ async function connectFarm(farmId, apiKey) {
         for (const [name, calculator] of Object.entries(CALCULATORS)) {
             results[name] = calculator.calculate(detectedItems, boosts, prices, config);
             storage.saveResults(name, results[name]);
+            
+            // Save to Firebase if signed in
+            if (firebaseAuth.isSignedIn()) {
+                firebaseAuth.saveCalculatorResults(name, results[name]).catch(err => {
+                    console.error(`Failed to save ${name} results to Firebase:`, err);
+                });
+            }
         }
         
         updateLoadingStep('step-calc', 'complete');
@@ -312,6 +546,19 @@ function openSettings() {
     const modal = document.getElementById('settings-modal');
     if (modal) {
         modal.style.display = 'flex';
+        
+        // Update user email
+        const user = firebaseAuth.getCurrentUser();
+        const userEmailSpan = document.getElementById('settings-user-email');
+        if (userEmailSpan) {
+            userEmailSpan.textContent = user ? (user.email || 'Anonymous') : 'Not signed in';
+        }
+        
+        // Update sync status
+        const syncStatus = document.getElementById('settings-sync-status');
+        if (syncStatus) {
+            syncStatus.textContent = firebaseAuth.isSignedIn() ? 'Enabled ✅' : 'Disabled (localStorage only)';
+        }
         
         // Update settings display
         const farmIdDisplay = document.getElementById('settings-farm-id');

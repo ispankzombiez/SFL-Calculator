@@ -25,12 +25,18 @@ npm-debug.log*
 *api_key*
 *API_KEY*
 
+# Firebase config with real credentials
+js/firebase-config.js
+# But allow the template
+!js/firebase-config-template.js
+
 # Build outputs (if any are added later)
 dist/
 build/
 
 # Node modules (if npm is used later)
 node_modules/
+package-lock.json
 
 # Personal notes
 notes.txt
