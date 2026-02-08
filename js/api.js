@@ -13,7 +13,24 @@ const CACHE_DURATION = {
     farm: 5 * 60 * 1000, // 5 minutes (can refresh more frequently)
 };
 
-// Try multiple CORS proxies in order of preference
+// =============================================================================
+// CORS PROXY CONFIGURATION
+// =============================================================================
+// 
+// IMPORTANT: Public CORS proxies block custom headers (like x-api-key)!
+// 
+// RECOMMENDED: Deploy your own Cloudflare Worker (FREE, 5 minutes)
+// Instructions: See cloudflare-worker/README.md
+// 
+// Once deployed, uncomment and set your worker URL:
+// const CUSTOM_CORS_PROXY = 'https://sfl-api-proxy.YOUR-SUBDOMAIN.workers.dev?url=';
+//
+// Then comment out or remove the CORS_PROXIES array below.
+// =============================================================================
+
+const CUSTOM_CORS_PROXY = null; // Set to your Cloudflare Worker URL
+
+// Fallback public proxies (NOTE: These block x-api-key headers!)
 const CORS_PROXIES = [
     'https://corsproxy.io/?',
     'https://api.codetabs.com/v1/proxy?quest=',
@@ -28,6 +45,12 @@ let currentProxyIndex = 0;
  * @returns {string} Proxied URL
  */
 function proxifyUrl(url) {
+    // Use custom proxy if configured (recommended!)
+    if (CUSTOM_CORS_PROXY) {
+        return CUSTOM_CORS_PROXY + encodeURIComponent(url);
+    }
+    
+    // Fallback to public proxies (may not work with x-api-key header)
     const proxy = CORS_PROXIES[currentProxyIndex];
     return proxy + encodeURIComponent(url);
 }
@@ -36,6 +59,11 @@ function proxifyUrl(url) {
  * Try next CORS proxy in the list
  */
 function tryNextProxy() {
+    // Don't cycle if using custom proxy
+    if (CUSTOM_CORS_PROXY) {
+        return;
+    }
+    
     currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
     console.log(`Switching to proxy: ${CORS_PROXIES[currentProxyIndex]}`);
 }
@@ -156,11 +184,16 @@ export async function fetchFarmData(farmId, apiKey) {
         
         // STEP 2: Try with CORS proxies as fallback
         let lastError = null;
-        const maxProxyRetries = CORS_PROXIES.length;
+        const maxProxyRetries = CUSTOM_CORS_PROXY ? 1 : CORS_PROXIES.length;
         
         for (let i = 0; i < maxProxyRetries; i++) {
             try {
-                console.log(`Trying proxy ${i + 1}/${maxProxyRetries}: ${CORS_PROXIES[currentProxyIndex]}`);
+                if (CUSTOM_CORS_PROXY) {
+                    console.log(`Trying custom CORS proxy: ${CUSTOM_CORS_PROXY}`);
+                } else {
+                    console.log(`Trying proxy ${i + 1}/${maxProxyRetries}: ${CORS_PROXIES[currentProxyIndex]}`);
+                }
+                
                 const response = await fetch(proxifyUrl(url), {
                     method: 'GET',
                     headers: {
@@ -195,7 +228,18 @@ export async function fetchFarmData(farmId, apiKey) {
         
         // All proxies failed
         console.error('All proxy attempts exhausted');
-        const errorMsg = 'Unable to connect to Sunflower Land API. Tried direct connection and multiple CORS proxies. This may be due to: (1) Network/firewall restrictions, (2) API temporarily unavailable, (3) CORS proxy limitations with custom headers. Please try again later or check your network settings.';
+        
+        // Provide specific guidance based on whether using custom proxy
+        let errorMsg;
+        if (CUSTOM_CORS_PROXY) {
+            errorMsg = 'Unable to connect through your custom CORS proxy. Please check: (1) Your Cloudflare Worker is deployed and accessible, (2) The worker URL is correct in api.js, (3) Your API key is valid.';
+        } else {
+            errorMsg = '⚠️ PUBLIC CORS PROXIES BLOCK AUTHENTICATION HEADERS!\n\n' +
+                      'Public CORS proxies cannot forward the x-api-key header needed for farm data.\n\n' +
+                      '✅ SOLUTION: Deploy your own Cloudflare Worker (FREE, 5 minutes)\n' +
+                      'Instructions: See cloudflare-worker/README.md in the repository.\n\n' +
+                      'This will give you a personal proxy that properly handles authentication.';
+        }
         throw new Error(errorMsg);
         
     } catch (error) {
