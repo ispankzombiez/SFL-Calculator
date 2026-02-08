@@ -717,10 +717,18 @@ body {
     cursor: not-allowed;
 }
 
-.landing-header .profile-icon-container {
+/* Header actions container (for refresh + profile buttons) */
+.header-actions {
     position: absolute;
     top: var(--spacing-md);
     right: var(--spacing-md);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.header-actions .profile-icon-container {
+    position: relative;
 }
 
 .profile-dropdown {
