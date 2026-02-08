@@ -280,6 +280,29 @@
                     <h3>Export</h3>
                     <button id="export-results-btn" class="btn btn-secondary">📥 Export Results (JSON)</button>
                 </div>
+
+                <div class="settings-section">
+                    <h3>Developer</h3>
+                    <button id="view-raw-data-btn" class="btn btn-secondary">🔍 View Raw API Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data Viewer Modal -->
+    <div id="raw-data-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 80vh;">
+            <header class="modal-header">
+                <h2>🔍 Raw API Data</h2>
+                <button class="modal-close" id="close-raw-data">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <button id="copy-raw-data-btn" class="btn btn-secondary">📋 Copy to Clipboard</button>
+                </div>
+                <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 16px; max-height: 500px; overflow-y: auto;">
+                    <pre id="raw-data-content" style="margin: 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', monospace; font-size: 12px;">Loading...</pre>
+                </div>
             </div>
         </div>
     </div>

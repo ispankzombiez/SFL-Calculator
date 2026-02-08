@@ -878,3 +878,28 @@ body {
 #email-login-form {
     margin-top: var(--spacing-lg);
 }
+/* ===== Raw Data Viewer ===== */
+#raw-data-content {
+    background: #f8f8f8;
+    color: #333;
+}
+
+body.dark-mode #raw-data-content {
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+
+#raw-data-modal .modal-content {
+    max-height: 90vh;
+}
+
+#raw-data-modal .modal-body {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(90vh - 140px);
+}
+
+#raw-data-modal pre {
+    flex: 1;
+    overflow-y: auto;
+}

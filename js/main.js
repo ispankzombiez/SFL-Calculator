@@ -232,12 +232,37 @@ function setupEventListeners() {
         exportBtn.addEventListener('click', handleExport);
     }
     
+    // Raw data viewer button
+    const viewRawDataBtn = document.getElementById('view-raw-data-btn');
+    if (viewRawDataBtn) {
+        viewRawDataBtn.addEventListener('click', openRawDataViewer);
+    }
+    
+    const closeRawData = document.getElementById('close-raw-data');
+    if (closeRawData) {
+        closeRawData.addEventListener('click', closeRawDataModal);
+    }
+    
+    const copyRawDataBtn = document.getElementById('copy-raw-data-btn');
+    if (copyRawDataBtn) {
+        copyRawDataBtn.addEventListener('click', copyRawDataToClipboard);
+    }
+    
     // Modal backdrop click to close
     const modal = document.getElementById('settings-modal');
     if (modal) {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 closeSettingsModal();
+            }
+        });
+    }
+    
+    const rawDataModal = document.getElementById('raw-data-modal');
+    if (rawDataModal) {
+        rawDataModal.addEventListener('click', (e) => {
+            if (e.target === rawDataModal) {
+                closeRawDataModal();
             }
         });
     }
@@ -978,6 +1003,13 @@ async function connectFarm(farmId, apiKey, retryCount = 0) {
         // Fetch all data
         const { prices, farmData } = await api.fetchAllData(farmId, apiKey);
         
+        // Save raw API data to Firebase if signed in
+        if (firebaseAuth.isSignedIn()) {
+            firebaseAuth.saveRawAPIData(prices, farmData).catch(err => {
+                console.error('Failed to save raw API data to Firebase:', err);
+            });
+        }
+        
         updateLoadingStep('step-prices', 'complete');
         updateLoadingStep('step-farm', 'complete');
         updateLoadingStep('step-items', 'loading');
@@ -1264,6 +1296,87 @@ function handleExport() {
     } catch (error) {
         console.error('Export error:', error);
         alert('Error exporting data');
+    }
+}
+
+/**
+ * Open raw data viewer modal
+ */
+async function openRawDataViewer() {
+    const modal = document.getElementById('raw-data-modal');
+    const content = document.getElementById('raw-data-content');
+    
+    if (!modal || !content) return;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    content.textContent = 'Loading raw API data...';
+    
+    try {
+        // Try to load from Firebase first
+        let rawData = null;
+        if (firebaseAuth.isSignedIn()) {
+            rawData = await firebaseAuth.loadRawAPIData();
+        }
+        
+        // If no Firebase data, use current app state
+        if (!rawData && appState.prices && appState.farmData) {
+            rawData = {
+                prices: appState.prices,
+                farmData: appState.farmData,
+                timestamp: new Date(),
+            };
+        }
+        
+        if (rawData) {
+            const formattedData = {
+                timestamp: rawData.timestamp ? new Date(rawData.timestamp.seconds * 1000).toISOString() : new Date().toISOString(),
+                prices: rawData.prices,
+                farmData: rawData.farmData,
+            };
+            content.textContent = JSON.stringify(formattedData, null, 2);
+        } else {
+            content.textContent = 'No API data available. Please connect to your farm first.';
+        }
+    } catch (error) {
+        console.error('Error loading raw data:', error);
+        content.textContent = 'Error loading raw API data. Check console for details.';
+    }
+}
+
+/**
+ * Close raw data viewer modal
+ */
+function closeRawDataModal() {
+    const modal = document.getElementById('raw-data-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Copy raw data to clipboard
+ */
+async function copyRawDataToClipboard() {
+    const content = document.getElementById('raw-data-content');
+    if (!content) return;
+    
+    try {
+        await navigator.clipboard.writeText(content.textContent);
+        
+        // Show feedback
+        const btn = document.getElementById('copy-raw-data-btn');
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.disabled = true;
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }, 2000);
+    } catch (error) {
+        console.error('Copy error:', error);
+        alert('Failed to copy to clipboard');
     }
 }
 

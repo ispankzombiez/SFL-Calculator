@@ -376,3 +376,50 @@ export async function loadCalculatorResults(calculatorType) {
         return null;
     }
 }
+
+/**
+ * Save raw API data to Firestore
+ */
+export async function saveRawAPIData(prices, farmData) {
+    if (!currentUser) return;
+
+    try {
+        const apiDataDoc = db.collection('users').doc(currentUser.uid)
+            .collection('apiData').doc('latest');
+        
+        await apiDataDoc.set({
+            prices: prices,
+            farmData: farmData,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        
+        console.log('Raw API data saved to Firestore');
+    } catch (error) {
+        console.error('Error saving raw API data:', error);
+    }
+}
+
+/**
+ * Load raw API data from Firestore
+ */
+export async function loadRawAPIData() {
+    if (!currentUser) return null;
+
+    try {
+        const apiDataDoc = await db.collection('users').doc(currentUser.uid)
+            .collection('apiData').doc('latest').get();
+        
+        if (apiDataDoc.exists) {
+            const data = apiDataDoc.data();
+            return {
+                prices: data.prices,
+                farmData: data.farmData,
+                timestamp: data.timestamp,
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Error loading raw API data:', error);
+        return null;
+    }
+}
