@@ -424,6 +424,12 @@ async function handleUserSignedIn() {
  * Show sign-in success message
  */
 function showSignInSuccess(user) {
+    // Hide debug status
+    const debugStatus = document.getElementById('debug-status');
+    if (debugStatus) {
+        debugStatus.style.display = 'none';
+    }
+    
     // Create or update success message
     let successDiv = document.getElementById('signin-success-message');
     
@@ -458,6 +464,14 @@ function handleUserSignedOut() {
     if (authSection) {
         authSection.style.display = 'block';
         console.log('[App] Auth section shown');
+    }
+    
+    // Show debug status again
+    const debugStatus = document.getElementById('debug-status');
+    const debugText = document.getElementById('debug-text');
+    if (debugStatus && debugText) {
+        debugStatus.style.display = 'block';
+        debugText.textContent = '✅ Firebase ready - you can sign in!';
     }
     
     // Hide success message
