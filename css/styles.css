@@ -79,32 +79,34 @@ body {
 }
 
 .landing-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: var(--color-bg-card);
-    padding: var(--spacing-lg) var(--spacing-xl);
-    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
     box-shadow: var(--shadow-md);
-    margin-bottom: var(--spacing-xxl);
+    z-index: 1000;
+    border-bottom: 2px solid var(--color-border);
 }
 
 .header-title-section {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
 }
 
 .landing-header h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     color: var(--color-primary);
     margin: 0;
 }
 
-.subtitle {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-    margin: 0;
+/* Add padding to container to account for fixed header */
+.landing-screen .container {
+    padding-top: 80px;
 }
 
 .connection-card {
