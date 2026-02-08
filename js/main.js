@@ -143,12 +143,26 @@ function setupEventListeners() {
     
     const emailSigninBtn = document.getElementById('email-signin-btn');
     if (emailSigninBtn) {
-        emailSigninBtn.addEventListener('click', handleEmailSignIn);
+        emailSigninBtn.addEventListener('click', () => {
+            // Hide confirm password field
+            const confirmGroup = document.getElementById('confirm-password-group');
+            if (confirmGroup) {
+                confirmGroup.style.display = 'none';
+            }
+            handleEmailSignIn();
+        });
     }
     
     const emailSignupBtn = document.getElementById('email-signup-btn');
     if (emailSignupBtn) {
-        emailSignupBtn.addEventListener('click', handleEmailSignUp);
+        emailSignupBtn.addEventListener('click', () => {
+            // Show confirm password field
+            const confirmGroup = document.getElementById('confirm-password-group');
+            if (confirmGroup) {
+                confirmGroup.style.display = 'block';
+            }
+            handleEmailSignUp();
+        });
     }
     
     const signoutBtn = document.getElementById('signout-btn');
@@ -363,6 +377,17 @@ function hideLoginModal() {
     if (modal) {
         modal.style.display = 'none';
     }
+    
+    // Reset form fields
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const confirmPasswordInput = document.getElementById('password-confirm-input');
+    const confirmGroup = document.getElementById('confirm-password-group');
+    
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+    if (confirmPasswordInput) confirmPasswordInput.value = '';
+    if (confirmGroup) confirmGroup.style.display = 'none';
 }
 
 /**
@@ -477,6 +502,7 @@ async function handleEmailSignUp() {
     const button = document.getElementById('email-signup-btn');
     const email = document.getElementById('email-input').value.trim();
     const password = document.getElementById('password-input').value;
+    const confirmPassword = document.getElementById('password-confirm-input').value;
     
     if (!email || !password) {
         showAuthErrorMessage('Please enter both email and password');
@@ -488,10 +514,18 @@ async function handleEmailSignUp() {
         return;
     }
     
+    if (password !== confirmPassword) {
+        showAuthErrorMessage('Passwords do not match');
+        return;
+    }
+    
     try {
         setButtonLoading(button, true);
         await firebaseAuth.createAccount(email, password);
         hideLoginModal();
+        // Reset confirm password field
+        document.getElementById('password-confirm-input').value = '';
+        document.getElementById('confirm-password-group').style.display = 'none';
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Account creation failed:', error);
