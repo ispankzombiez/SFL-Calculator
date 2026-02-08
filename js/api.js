@@ -13,59 +13,17 @@ const CACHE_DURATION = {
     farm: 5 * 60 * 1000, // 5 minutes (can refresh more frequently)
 };
 
-// =============================================================================
-// CORS PROXY CONFIGURATION
-// =============================================================================
-// 
-// IMPORTANT: Public CORS proxies block custom headers (like x-api-key)!
-// 
-// RECOMMENDED: Deploy your own Cloudflare Worker (FREE, 5 minutes)
-// Instructions: See cloudflare-worker/README.md
-// 
-// Once deployed, uncomment and set your worker URL:
-// const CUSTOM_CORS_PROXY = 'https://sfl-api-proxy.YOUR-SUBDOMAIN.workers.dev?url=';
-//
-// Then comment out or remove the CORS_PROXIES array below.
-// =============================================================================
-
-const CUSTOM_CORS_PROXY = 'https://sfl-proxy.caleb-bren1.workers.dev?url='; // ✅ ACTIVE
-
-// Fallback public proxies (NOTE: These block x-api-key headers!)
-const CORS_PROXIES = [
-    'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest=',
-    'https://api.allorigins.win/raw?url=',
-];
-
-let currentProxyIndex = 0;
+// Cloudflare Worker CORS Proxy
+// Deployed at: https://sfl-proxy.caleb-bren1.workers.dev
+const CORS_PROXY = 'https://sfl-proxy.caleb-bren1.workers.dev?url=';
 
 /**
- * Build URL with CORS proxy if needed
+ * Build URL with CORS proxy
  * @param {string} url - Original URL
  * @returns {string} Proxied URL
  */
 function proxifyUrl(url) {
-    // Use custom proxy if configured (recommended!)
-    if (CUSTOM_CORS_PROXY) {
-        return CUSTOM_CORS_PROXY + encodeURIComponent(url);
-    }
-    
-    // Fallback to public proxies (may not work with x-api-key header)
-    const proxy = CORS_PROXIES[currentProxyIndex];
-    return proxy + encodeURIComponent(url);
-}
-
-/**
- * Try next CORS proxy in the list
- */
-function tryNextProxy() {
-    // Don't cycle if using custom proxy
-    if (CUSTOM_CORS_PROXY) {
-        return;
-    }
-    
-    currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
-    console.log(`Switching to proxy: ${CORS_PROXIES[currentProxyIndex]}`);
+    return CORS_PROXY + encodeURIComponent(url);
 }
 
 /**
@@ -81,23 +39,7 @@ export async function fetchP2PPrices() {
             return cached.data;
         }
 
-        console.log('Fetching fresh price data from sfl.world...');
-        
-        // STEP 1: Try direct request first
-        try {
-            const directResponse = await fetch(API_ENDPOINTS.prices);
-            
-            if (directResponse.ok) {
-                const prices = await directResponse.json();
-                setCachedData('prices', prices, CACHE_DURATION.prices);
-                console.log(`✅ Fetched ${Object.keys(prices).length} item prices (direct)`);
-                return prices;
-            }
-        } catch (directError) {
-            console.log('Direct price request failed, trying proxy...', directError.message);
-        }
-        
-        // STEP 2: Try with proxy if direct failed
+        console.log('Fetching price data from sfl.world...');
         const response = await fetch(proxifyUrl(API_ENDPOINTS.prices));
         
         if (!response.ok) {
@@ -105,11 +47,9 @@ export async function fetchP2PPrices() {
         }
 
         const prices = await response.json();
-        
-        // Cache the results
         setCachedData('prices', prices, CACHE_DURATION.prices);
         
-        console.log(`✅ Fetched ${Object.keys(prices).length} item prices (via proxy)`);
+        console.log(`✅ Fetched ${Object.keys(prices).length} item prices`);
         return prices;
         
     } catch (error) {
@@ -159,96 +99,26 @@ export async function fetchFarmData(farmId, apiKey) {
         console.log(`Fetching farm data for farm ${farmId}...`);
         const url = `${API_ENDPOINTS.farm}/${farmId}`;
         
-        // STEP 1: Try direct request first (API might support CORS natively)
-        console.log('Attempting direct API request...');
-        try {
-            const directResponse = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'x-api-key': apiKey,
-                    'Content-Type': 'application/json',
-                },
-            });
+        const response = await fetch(proxifyUrl(url), {
+            method: 'GET',
+            headers: {
+                'x-api-key': apiKey,
+                'Content-Type': 'application/json',
+            },
+        });
 
-            if (directResponse.ok) {
-                const farmData = await directResponse.json();
-                setCachedData(cacheKey, farmData, CACHE_DURATION.farm);
-                console.log('✅ Farm data fetched successfully (direct)');
-                return farmData;
-            } else {
-                await handleFarmAPIError(directResponse);
-            }
-        } catch (directError) {
-            console.log('Direct request failed (likely CORS), trying proxies...', directError.message);
+        if (!response.ok) {
+            await handleFarmAPIError(response);
         }
-        
-        // STEP 2: Try with CORS proxies as fallback
-        let lastError = null;
-        const maxProxyRetries = CUSTOM_CORS_PROXY ? 1 : CORS_PROXIES.length;
-        
-        for (let i = 0; i < maxProxyRetries; i++) {
-            try {
-                if (CUSTOM_CORS_PROXY) {
-                    console.log(`Trying custom CORS proxy: ${CUSTOM_CORS_PROXY}`);
-                } else {
-                    console.log(`Trying proxy ${i + 1}/${maxProxyRetries}: ${CORS_PROXIES[currentProxyIndex]}`);
-                }
-                
-                const response = await fetch(proxifyUrl(url), {
-                    method: 'GET',
-                    headers: {
-                        'x-api-key': apiKey,
-                        'Content-Type': 'application/json',
-                    },
-                });
 
-                if (!response.ok) {
-                    await handleFarmAPIError(response);
-                }
-
-                const farmData = await response.json();
-                
-                // Cache the results
-                setCachedData(cacheKey, farmData, CACHE_DURATION.farm);
-                
-                console.log('✅ Farm data fetched successfully via proxy');
-                return farmData;
-                
-            } catch (error) {
-                console.warn(`❌ Proxy attempt ${i + 1}/${maxProxyRetries} failed:`, error.message);
-                lastError = error;
-                
-                // If not the last attempt, try next proxy
-                if (i < maxProxyRetries - 1) {
-                    tryNextProxy();
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay before retry
-                }
-            }
-        }
+        const farmData = await response.json();
+        setCachedData(cacheKey, farmData, CACHE_DURATION.farm);
         
-        // All proxies failed
-        console.error('All proxy attempts exhausted');
-        
-        // Provide specific guidance based on whether using custom proxy
-        let errorMsg;
-        if (CUSTOM_CORS_PROXY) {
-            errorMsg = 'Unable to connect through your custom CORS proxy. Please check: (1) Your Cloudflare Worker is deployed and accessible, (2) The worker URL is correct in api.js, (3) Your API key is valid.';
-        } else {
-            errorMsg = '⚠️ PUBLIC CORS PROXIES BLOCK AUTHENTICATION HEADERS!\n\n' +
-                      'Public CORS proxies cannot forward the x-api-key header needed for farm data.\n\n' +
-                      '✅ SOLUTION: Deploy your own Cloudflare Worker (FREE, 5 minutes)\n' +
-                      'Instructions: See cloudflare-worker/README.md in the repository.\n\n' +
-                      'This will give you a personal proxy that properly handles authentication.';
-        }
-        throw new Error(errorMsg);
+        console.log('✅ Farm data fetched successfully');
+        return farmData;
         
     } catch (error) {
         console.error('Error fetching farm data:', error);
-        
-        // Provide more specific error message for fetch failures
-        if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
-            throw new Error('Unable to connect to Sunflower Land API. Please check: (1) Your internet connection, (2) Your API key is valid, (3) The Sunflower Land API is accessible. Note: Some browsers/networks may block this request due to CORS policies.');
-        }
         throw error;
     }
 }
