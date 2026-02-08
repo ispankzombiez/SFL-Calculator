@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Listen for auth state changes
     window.addEventListener('authStateChanged', handleAuthChange);
     
+    // Listen for auth errors
+    window.addEventListener('authError', handleAuthError);
+    
     // Check initial auth state
     if (firebaseAuth.isSignedIn()) {
         await handleUserSignedIn();
@@ -164,15 +167,73 @@ function setupEventListeners() {
 }
 
 /**
+ * Set button loading state
+ */
+function setButtonLoading(button, isLoading) {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.disabled = true;
+        button.dataset.originalText = button.textContent;
+        button.innerHTML = '<span class="spinner" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Loading...';
+    } else {
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || button.textContent;
+    }
+}
+
+/**
+ * Show authentication error message
+ */
+function showAuthErrorMessage(message) {
+    // Create or update error display
+    let errorDiv = document.getElementById('auth-error-message');
+    
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'auth-error-message';
+        errorDiv.className = 'error-message';
+        errorDiv.style.cssText = 'background: #fee; border: 1px solid #fcc; color: #c33; padding: 12px; border-radius: 4px; margin: 12px 0; display: none;';
+        
+        const authSection = document.getElementById('auth-section');
+        if (authSection) {
+            authSection.appendChild(errorDiv);
+        }
+    }
+    
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        errorDiv.style.display = 'none';
+    }, 5000);
+}
+
+/**
+ * Handle authentication errors
+ */
+function handleAuthError(event) {
+    const message = event.detail?.message || 'An error occurred. Please try again.';
+    console.error('Auth error:', message);
+    showAuthErrorMessage(message);
+}
+
+/**
  * Handle Google sign-in
  */
 async function handleGoogleSignIn() {
+    const button = document.getElementById('google-signin-btn');
+    
     try {
+        setButtonLoading(button, true);
         await firebaseAuth.signInWithGoogle();
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Google sign-in failed:', error);
-        alert(`Sign-in failed: ${error.message}`);
+        showAuthErrorMessage(error.message);
+    } finally {
+        setButtonLoading(button, false);
     }
 }
 
@@ -180,12 +241,17 @@ async function handleGoogleSignIn() {
  * Handle anonymous sign-in
  */
 async function handleAnonymousSignIn() {
+    const button = document.getElementById('anonymous-signin-btn');
+    
     try {
+        setButtonLoading(button, true);
         await firebaseAuth.signInAnonymously();
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Anonymous sign-in failed:', error);
-        alert(`Sign-in failed: ${error.message}`);
+        showAuthErrorMessage(error.message);
+    } finally {
+        setButtonLoading(button, false);
     }
 }
 
@@ -193,20 +259,24 @@ async function handleAnonymousSignIn() {
  * Handle email sign-in
  */
 async function handleEmailSignIn() {
+    const button = document.getElementById('email-signin-btn');
     const email = document.getElementById('email-input').value.trim();
     const password = document.getElementById('password-input').value;
     
     if (!email || !password) {
-        alert('Please enter both email and password');
+        showAuthErrorMessage('Please enter both email and password');
         return;
     }
     
     try {
+        setButtonLoading(button, true);
         await firebaseAuth.signInWithEmail(email, password);
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Email sign-in failed:', error);
-        alert(`Sign-in failed: ${error.message}`);
+        showAuthErrorMessage(error.message);
+    } finally {
+        setButtonLoading(button, false);
     }
 }
 
@@ -214,25 +284,29 @@ async function handleEmailSignIn() {
  * Handle email sign-up
  */
 async function handleEmailSignUp() {
+    const button = document.getElementById('email-signup-btn');
     const email = document.getElementById('email-input').value.trim();
     const password = document.getElementById('password-input').value;
     
     if (!email || !password) {
-        alert('Please enter both email and password');
+        showAuthErrorMessage('Please enter both email and password');
         return;
     }
     
     if (password.length < 6) {
-        alert('Password must be at least 6 characters');
+        showAuthErrorMessage('Password must be at least 6 characters');
         return;
     }
     
     try {
+        setButtonLoading(button, true);
         await firebaseAuth.createAccount(email, password);
         // handleUserSignedIn will be called by auth state change listener
     } catch (error) {
         console.error('Account creation failed:', error);
-        alert(`Account creation failed: ${error.message}`);
+        showAuthErrorMessage(error.message);
+    } finally {
+        setButtonLoading(button, false);
     }
 }
 
