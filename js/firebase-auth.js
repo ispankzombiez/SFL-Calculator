@@ -387,9 +387,10 @@ export async function saveRawAPIData(prices, farmData) {
         const apiDataDoc = db.collection('users').doc(currentUser.uid)
             .collection('apiData').doc('latest');
         
+        // Convert to JSON strings to avoid nested array issues in Firestore
         await apiDataDoc.set({
-            prices: prices,
-            farmData: farmData,
+            pricesJSON: JSON.stringify(prices),
+            farmDataJSON: JSON.stringify(farmData),
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         });
         
@@ -412,8 +413,8 @@ export async function loadRawAPIData() {
         if (apiDataDoc.exists) {
             const data = apiDataDoc.data();
             return {
-                prices: data.prices,
-                farmData: data.farmData,
+                prices: JSON.parse(data.pricesJSON),
+                farmData: JSON.parse(data.farmDataJSON),
                 timestamp: data.timestamp,
             };
         }
