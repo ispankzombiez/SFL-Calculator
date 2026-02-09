@@ -1240,7 +1240,7 @@ function switchCalculator(calculatorName) {
 /**
  * Render calculator results
  */
-function renderCalculator(calculatorName) {
+async function renderCalculator(calculatorName) {
     // Special case for overview - it's handled by dashboard.js
     if (calculatorName === 'overview') {
         dashboardModule.initializeDashboard().catch(err => {
@@ -1253,7 +1253,7 @@ function renderCalculator(calculatorName) {
     if (calculatorName === 'raw-data') {
         const container = document.getElementById('raw-data-container');
         if (container) {
-            rawDataView.renderRawDataView(container);
+            await rawDataView.renderRawDataView(container);
         }
         return;
     }

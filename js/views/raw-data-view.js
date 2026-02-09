@@ -7,13 +7,16 @@
  * Render the raw data view
  * @param {HTMLElement} container - Container to render into
  */
-export function renderRawDataView(container) {
+export async function renderRawDataView(container) {
     if (!window.loadRawAPIData) {
         container.innerHTML = '<p class="error">Raw API data loader not available. Please refresh the page.</p>';
         return;
     }
 
-    const rawData = window.loadRawAPIData();
+    // Show loading state
+    container.innerHTML = '<div class="loading">Loading raw data...</div>';
+
+    const rawData = await window.loadRawAPIData();
     
     if (!rawData) {
         container.innerHTML = `
@@ -323,10 +326,10 @@ function attachEventListeners(rawData) {
             window.dispatchEvent(event);
             
             // Re-render after a short delay
-            setTimeout(() => {
+            setTimeout(async () => {
                 const container = document.getElementById('raw-data-container');
                 if (container) {
-                    renderRawDataView(container);
+                    await renderRawDataView(container);
                 }
             }, 2000);
         });
