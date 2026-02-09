@@ -4,17 +4,8 @@
  * @version 2.0.0 - Enhanced debugging and initialization
  */
 
-// Firebase Configuration (inlined to avoid ES6 module conflicts with compat SDK)
-const firebaseConfig = {
-    apiKey: "AIzaSyAv5mzdWcWJUwfZIwApkyWR9Vn2rGTwnyM",
-    authDomain: "sfl-calculator.firebaseapp.com",
-    databaseURL: "https://sfl-calculator-default-rtdb.firebaseio.com",
-    projectId: "sfl-calculator",
-    storageBucket: "sfl-calculator.firebasestorage.app",
-    messagingSenderId: "279520711470",
-    appId: "1:279520711470:web:998b6d743a4f3a7e76e0bf",
-    measurementId: "G-WR0Q9QQ474"
-};
+// Import Firebase configuration from gitignored file
+import { firebaseConfig } from './firebase-config.js';
 
 // Firebase will be loaded from CDN in index.html
 let auth = null;

@@ -2,6 +2,8 @@
  * Cow Calculator View - Displays level-by-level analysis like Google Sheets
  */
 
+import { openEconomicSettings } from '../dashboard.js';
+
 export function renderCowView(container) {
     if (!window.economicAnalyzer) {
         container.innerHTML = '<p class="error">Economic analyzer not initialized. Please refresh the page.</p>';
@@ -127,9 +129,7 @@ export function renderCowView(container) {
     const settingsBtn = document.getElementById('open-cow-settings');
     if (settingsBtn) {
         settingsBtn.addEventListener('click', () => {
-            // Open economic settings modal
-            const event = new CustomEvent('openEconomicSettings');
-            window.dispatchEvent(event);
+            openEconomicSettings();
         });
     }
 }

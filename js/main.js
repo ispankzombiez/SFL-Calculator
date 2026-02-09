@@ -8,6 +8,7 @@ import * as storage from './storage.js';
 import * as itemDetector from './item-detector.js';
 import * as firebaseAuth from './firebase-auth.js';
 import * as dashboardModule from './dashboard.js';
+import * as cowView from './views/cow-view.js';
 
 // Import calculators
 import * as cowCalc from './calculators/cow.js';
@@ -1247,19 +1248,39 @@ function renderCalculator(calculatorName) {
         return;
     }
     
-    const calculator = CALCULATORS[calculatorName];
-    if (!calculator || !calculator.calculate) return;
-    
+    // Handle calculator views
     const container = document.getElementById(`${calculatorName}-results`);
     if (!container) return;
     
-    const results = appState.results[calculatorName];
-    if (!results) {
-        container.innerHTML = '<p>No results available</p>';
+    // Check if economic analyzer is ready
+    if (!window.economicAnalyzer) {
+        container.innerHTML = '<p class="error">Loading calculator... Please wait.</p>';
         return;
     }
     
-    calculator.render(results, container);
+    // Render based on calculator type
+    switch(calculatorName) {
+        case 'cows':
+            cowView.renderCowView(container);
+            break;
+        case 'chickens':
+            container.innerHTML = '<p>Chicken calculator coming soon! Will display level-by-level egg production analysis.</p>';
+            break;
+        case 'sheep':
+            container.innerHTML = '<p>Sheep calculator coming soon! Will display level-by-level wool production analysis.</p>';
+            break;
+        case 'resources':
+            container.innerHTML = '<p>Resource calculator coming soon! Will display tool cost and profit analysis.</p>';
+            break;
+        case 'greenhouse':
+            container.innerHTML = '<p>Greenhouse calculator coming soon! Will display crop profitability with oil costs.</p>';
+            break;
+        case 'cooking':
+            container.innerHTML = '<p>Cooking calculator coming soon! Will display recipe time and profit analysis.</p>';
+            break;
+        default:
+            container.innerHTML = '<p>Calculator not found</p>';
+    }
 }
 
 /**

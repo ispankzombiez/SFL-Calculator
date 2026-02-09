@@ -369,6 +369,9 @@ function updateEconomicAnalysis(analysis) {
     }
 }
 
+// Export openEconomicSettings for use by other modules
+export { openEconomicSettings };
+
 /**
  * Open economic settings modal
  */
@@ -386,13 +389,16 @@ function openEconomicSettings() {
         
         // Load values
         document.getElementById('tax-rate').value = settings.p2pTaxRate;
-        document.getElementById('betty-rate').value = settings.bettyRate;
-        document.getElementById('cow-sleep-time').value = settings.animalSleepTime.Cow;
-        document.getElementById('chicken-sleep-time').value = settings.animalSleepTime.Chicken;
-        document.getElementById('sheep-sleep-time').value = settings.animalSleepTime.Sheep;
-        document.getElementById('num-cows').value = settings.numAnimals.Cow || 0;
-        document.getElementById('num-chickens').value = settings.numAnimals.Chicken || 0;
-        document.getElementById('num-sheep').value = settings.numAnimals.Sheep || 0;
+        document.getElementById('betty-rate').value = settings.bettyConversionRate;
+        document.getElementById('cow-sleep-time').value = settings.cowSleepTime;
+        document.getElementById('chicken-sleep-time').value = settings.chickenSleepTime;
+        document.getElementById('sheep-sleep-time').value = settings.sheepSleepTime;
+        document.getElementById('num-cows').value = settings.numCows || 0;
+        document.getElementById('num-chickens').value = settings.numChickens || 0;
+        document.getElementById('num-sheep').value = settings.numSheep || 0;
+        
+        // Populate item toggles
+        populateItemToggles(config);
     }
     
     // Show modal
@@ -403,6 +409,163 @@ function openEconomicSettings() {
         setupEconomicSettingsListeners();
         modal.dataset.listenersAttached = 'true';
     }
+}
+
+/**
+ * Populate item and skill toggles
+ */
+function populateItemToggles(config) {
+    const cowItems = [
+        { name: 'Milk Apron', effect: '+0.5 milk' },
+        { name: 'Cowbell', effect: '+2.0 milk' },
+        { name: 'Cowfish', effect: '+0.2 milk' },
+        { name: 'Cattlegrim', effect: '+0.25 milk, +0.25 leather' },
+        { name: 'Moo-ver', effect: '+0.25 leather' },
+        { name: 'Animal Bud', effect: '+0.2 milk, +0.2 leather' },
+        { name: 'Mootant', effect: '+0.1 leather' },
+        { name: 'Training Whistle', effect: '+1.0 leather' },
+        { name: 'Bull Whip', effect: '50% feed reduction' },
+        { name: 'Dr. Cow', effect: '5% feed reduction' },
+        { name: 'Gold Cow', effect: 'Free feeding' },
+        { name: 'Collie Shrine', effect: '+0.25 milk, +0.25 leather' }
+    ];
+    
+    const chickenItems = [
+        { name: 'Fat Chicken', effect: '+0.1 to all outputs' },
+        { name: 'Rich Chicken', effect: '+0.1 to all outputs' },
+        { name: 'Alien Chicken', effect: '+0.2 egg' },
+        { name: 'Undead Rooster', effect: '+1.0 leather' },
+        { name: 'Ayam Cemani', effect: '+0.2 egg' },
+        { name: 'Chicken Suit', effect: '+2.0 egg' },
+        { name: 'Cluckulator', effect: '+0.1 egg' },
+        { name: 'Chicken Coop', effect: '+1.0 egg, +0.5 leather' },
+        { name: 'Gold Egg', effect: '+2.0 egg' }
+    ];
+    
+    const sheepItems = [
+        { name: 'W. Sheep Onesie', effect: '+0.1 wool' },
+        { name: 'Toxic Tuft', effect: '+2.0 wool' },
+        { name: 'Merino Jumper', effect: '+2.0 wool' },
+        { name: 'B. Sheep Onesie', effect: '+0.1 wool' },
+        { name: 'Gold Sheep', effect: '+3.0 wool' }
+    ];
+    
+    const resourceItems = [
+        { name: 'Faction Shield', effect: '+0.25 wood & minerals' },
+        { name: 'Volcano Gnome', effect: '+0.1 all minerals' },
+        { name: 'Cave Bud', effect: '+0.2 minerals' },
+        { name: 'Mineral Stem', effect: '+0.2 minerals' },
+        { name: 'Squirrel', effect: '+0.1 wood' },
+        { name: 'Tiki Totem', effect: '+0.1 wood' },
+        { name: 'Woody Beaver', effect: '+0.2 wood' },
+        { name: 'Apprentice Beaver', effect: '+0.2 wood' },
+        { name: 'Foreman Beaver', effect: '+0.2 wood' },
+        { name: 'Wood Nymph Wendy', effect: '+0.2 wood' },
+        { name: 'Wood Bud', effect: '+0.2 wood' },
+        { name: 'Bud Stem', effect: '+0.1 wood' },
+        { name: 'Stone Beetle', effect: '+0.1 stone' },
+        { name: 'Tunnel Mole', effect: '+0.25 stone' },
+        { name: 'Rock Golem', effect: '+0.2 stone (10% chance +2)' },
+        { name: 'Tin Turtle', effect: '+0.9 stone (3x3 AOE)' },
+        { name: 'Emerald Turtle', effect: '+0.5 stone (3x3 AOE)' }
+    ];
+    
+    const greenhouseItems = [
+        { name: 'Rice Panda', effect: '+0.25 rice' },
+        { name: 'Olive Royalty Shirt', effect: '+0.25 olive' },
+        { name: 'Vinny', effect: '+0.25 grape' },
+        { name: 'Grape Pants', effect: '+0.2 grape' },
+        { name: 'Olive Shield', effect: '+1.0 olive' },
+        { name: 'Non La Hat', effect: '+1.0 rice' },
+        { name: 'Grape Granny', effect: '+1.0 grape' },
+        { name: 'Turbo Sprout', effect: '50% faster growth' },
+        { name: 'Pharaoh Gnome', effect: 'Doubles all produce' },
+        { name: 'Hoot', effect: '+0.5 rice' },
+        { name: 'Green Amulet', effect: '10% chance x10 yield' },
+        { name: 'Infernal Drill', effect: 'Free oil' }
+    ];
+    
+    const skills = [
+        { name: 'Abundant Harvest', effect: '+0.1 to all animal outputs' },
+        { name: 'Bale Economy', effect: '-10% feed' },
+        { name: 'Double Bale', effect: '+0.1 all outputs' },
+        { name: 'Fine Fibers', effect: '+0.5 wool' },
+        { name: 'Chunky Feed', effect: '2x XP, 1.5x food cost' },
+        { name: 'Cow Smart', effect: '+1.0 milk' },
+        { name: 'Efficient Feeding', effect: '-20% feed' },
+        { name: 'Leathercraft', effect: '+1.0 leather' },
+        { name: 'Featherweight', effect: '+1.0 egg' },
+        { name: 'Clucky Grazing', effect: '-15% feed (chickens)' },
+        { name: 'Sheepwise Diet', effect: '-20% feed (sheep)' },
+        { name: 'Green Thumb', effect: '+10% crop yield' },
+        { name: 'Master Farmer', effect: '+5% all farming' },
+        { name: 'Lumberjack', effect: '+10% wood' },
+        { name: 'Tree Hugger', effect: '+5% wood, +1hr tree time' },
+        { name: 'Mining Mastery', effect: '+10% minerals' },
+        { name: 'Crop Whisperer', effect: '+15% crop yield' },
+        { name: 'Rush Hour', effect: '-10% cooking time' }
+    ];
+    
+    renderItemToggles('cow-items-list', cowItems, config);
+    renderItemToggles('chicken-items-list', chickenItems, config);
+    renderItemToggles('sheep-items-list', sheepItems, config);
+    renderItemToggles('resource-items-list', resourceItems, config);
+    renderItemToggles('greenhouse-items-list', greenhouseItems, config);
+    renderSkillToggles('skills-list', skills, config);
+}
+
+/**
+ * Render item toggles in a container
+ */
+function renderItemToggles(containerId, items, config) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    let html = '';
+    items.forEach(item => {
+        const isChecked = config.hasItem(item.name);
+        html += `
+            <div class="item-toggle">
+                <div class="item-info">
+                    <span class="item-name">${item.name}</span>
+                    <span class="item-effect">${item.effect}</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" data-item="${item.name}" ${isChecked ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+/**
+ * Render skill toggles
+ */
+function renderSkillToggles(containerId, skills, config) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    let html = '';
+    skills.forEach(skill => {
+        const isChecked = config.hasSkill(skill.name);
+        html += `
+            <div class="item-toggle">
+                <div class="item-info">
+                    <span class="item-name">${skill.name}</span>
+                    <span class="item-effect">${skill.effect}</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" data-skill="${skill.name}" ${isChecked ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
 }
 
 /**
@@ -481,6 +644,20 @@ async function handleEconomicSettingsSave(e) {
         config.setNumAnimals('Cow', numCows);
         config.setNumAnimals('Chicken', numChickens);
         config.setNumAnimals('Sheep', numSheep);
+        
+        // Save item toggles
+        const itemCheckboxes = document.querySelectorAll('input[data-item]');
+        itemCheckboxes.forEach(checkbox => {
+            const itemName = checkbox.dataset.item;
+            config.setItem(itemName, checkbox.checked);
+        });
+        
+        // Save skill toggles
+        const skillCheckboxes = document.querySelectorAll('input[data-skill]');
+        skillCheckboxes.forEach(checkbox => {
+            const skillName = checkbox.dataset.skill;
+            config.setSkill(skillName, checkbox.checked);
+        });
         
         // Save to localStorage
         config.saveSettings();
