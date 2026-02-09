@@ -19,10 +19,10 @@ export async function initializeDashboard() {
             return null;
         }
         
-        // Parse the JSON strings
+        // Data is already parsed by loadRawAPIData()
         const parsedData = {
-            prices: JSON.parse(rawData.prices),
-            farmData: JSON.parse(rawData.farmData)
+            prices: rawData.prices,
+            farmData: rawData.farmData
         };
         
         // Create calculator instance
@@ -521,9 +521,10 @@ async function handleAutoDetectSettings() {
             return;
         }
         
+        // Data is already parsed by loadRawAPIData()
         const parsedData = {
-            prices: JSON.parse(rawData.prices),
-            farmData: JSON.parse(rawData.farmData)
+            prices: rawData.prices,
+            farmData: rawData.farmData
         };
         
         // Auto-detect from farm data
