@@ -378,9 +378,22 @@ export async function loadCalculatorResults(calculatorType) {
 }
 
 /**
- * Save raw API data to Firestore
+ * Save raw API data to Firestore and localStorage
  */
 export async function saveRawAPIData(prices, farmData) {
+    // Always save to localStorage as backup
+    try {
+        localStorage.setItem('sfl_raw_api_data', JSON.stringify({
+            prices,
+            farmData,
+            timestamp: new Date().toISOString(),
+        }));
+        console.log('Raw API data saved to localStorage');
+    } catch (error) {
+        console.warn('Failed to save raw API data to localStorage:', error);
+    }
+    
+    // Try to save to Firestore if user is signed in (non-critical)
     if (!currentUser) return;
 
     try {
@@ -396,31 +409,43 @@ export async function saveRawAPIData(prices, farmData) {
         
         console.log('Raw API data saved to Firestore');
     } catch (error) {
-        console.error('Error saving raw API data:', error);
+        // Non-critical error - just log warning
+        console.warn('Unable to save raw API data to Firestore (this is optional):', error.message);
     }
 }
 
 /**
- * Load raw API data from Firestore
+ * Load raw API data from Firestore or localStorage
  */
 export async function loadRawAPIData() {
-    if (!currentUser) return null;
-
-    try {
-        const apiDataDoc = await db.collection('users').doc(currentUser.uid)
-            .collection('apiData').doc('latest').get();
-        
-        if (apiDataDoc.exists) {
-            const data = apiDataDoc.data();
-            return {
-                prices: JSON.parse(data.pricesJSON),
-                farmData: JSON.parse(data.farmDataJSON),
-                timestamp: data.timestamp,
-            };
+    // Try Firestore first if user is signed in
+    if (currentUser) {
+        try {
+            const apiDataDoc = await db.collection('users').doc(currentUser.uid)
+                .collection('apiData').doc('latest').get();
+            
+            if (apiDataDoc.exists) {
+                const data = apiDataDoc.data();
+                return {
+                    prices: JSON.parse(data.pricesJSON),
+                    farmData: JSON.parse(data.farmDataJSON),
+                    timestamp: data.timestamp,
+                };
+            }
+        } catch (error) {
+            console.warn('Could not load from Firestore, trying localStorage:', error.message);
         }
-        return null;
-    } catch (error) {
-        console.error('Error loading raw API data:', error);
-        return null;
     }
+    
+    // Fallback to localStorage
+    try {
+        const stored = localStorage.getItem('sfl_raw_api_data');
+        if (stored) {
+            return JSON.parse(stored);
+        }
+    } catch (error) {
+        console.error('Error loading raw API data from localStorage:', error);
+    }
+    
+    return null;
 }
