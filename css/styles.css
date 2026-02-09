@@ -1863,6 +1863,19 @@ body.dark-mode #raw-data-content {
     font-size: 1em;
 }
 
+/* Animal Groups */
+.animal-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.animal-group h5 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--color-text);
+    font-size: 1em;
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-border);
+}
+
 /* Buildings Display */
 .buildings-display {
     display: grid;

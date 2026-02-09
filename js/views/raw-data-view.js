@@ -94,7 +94,10 @@ export async function renderRawDataView(container) {
  * Render price data in readable format
  */
 function renderPriceData(prices) {
-    if (!prices || Object.keys(prices).length === 0) {
+    // Extract actual P2P prices from nested structure
+    const p2pPrices = prices?.data?.p2p || prices;
+    
+    if (!p2pPrices || Object.keys(p2pPrices).length === 0) {
         return '<p class="no-data">No price data available</p>';
     }
 
@@ -110,7 +113,7 @@ function renderPriceData(prices) {
     let html = '<div class="price-categories">';
 
     for (const [category, items] of Object.entries(categories)) {
-        const categoryItems = items.filter(item => prices[item] !== undefined);
+        const categoryItems = items.filter(item => p2pPrices[item] !== undefined);
         
         if (categoryItems.length > 0) {
             html += `
@@ -120,7 +123,7 @@ function renderPriceData(prices) {
                         ${categoryItems.map(item => `
                             <div class="price-item">
                                 <span class="item-name">${item}</span>
-                                <span class="item-price">${formatPrice(prices[item])} SFL</span>
+                                <span class="item-price">${formatPrice(p2pPrices[item])} SFL</span>
                             </div>
                         `).join('')}
                     </div>
@@ -131,7 +134,7 @@ function renderPriceData(prices) {
 
     // Add any uncategorized items
     const categorizedItems = Object.values(categories).flat();
-    const uncategorizedItems = Object.keys(prices).filter(item => !categorizedItems.includes(item));
+    const uncategorizedItems = Object.keys(p2pPrices).filter(item => !categorizedItems.includes(item));
     
     if (uncategorizedItems.length > 0) {
         html += `
@@ -141,7 +144,7 @@ function renderPriceData(prices) {
                     ${uncategorizedItems.map(item => `
                         <div class="price-item">
                             <span class="item-name">${item}</span>
-                            <span class="item-price">${formatPrice(prices[item])} SFL</span>
+                            <span class="item-price">${formatPrice(p2pPrices[item])} SFL</span>
                         </div>
                     `).join('')}
                 </div>
@@ -157,29 +160,32 @@ function renderPriceData(prices) {
  * Render farm data in readable format
  */
 function renderFarmData(farmData) {
-    if (!farmData) {
+    // Extract actual farm data from nested structure
+    const farm = farmData?.farm || farmData;
+    
+    if (!farm) {
         return '<p class="no-data">No farm data available</p>';
     }
 
     let html = '<div class="farm-sections">';
 
     // Farm ID and Basic Info
-    if (farmData.id || farmData.farmId) {
+    if (farm.id || farm.farmId) {
         html += `
             <div class="farm-section">
                 <h4>🆔 Farm Identification</h4>
                 <div class="data-grid">
-                    ${farmData.id ? `<div class="data-item"><span class="label">ID:</span><span class="value">${farmData.id}</span></div>` : ''}
-                    ${farmData.farmId ? `<div class="data-item"><span class="label">Farm ID:</span><span class="value">${farmData.farmId}</span></div>` : ''}
-                    ${farmData.owner ? `<div class="data-item"><span class="label">Owner:</span><span class="value">${farmData.owner.slice(0, 10)}...${farmData.owner.slice(-8)}</span></div>` : ''}
+                    ${farm.id ? `<div class="data-item"><span class="label">ID:</span><span class="value">${farm.id}</span></div>` : ''}
+                    ${farm.farmId ? `<div class="data-item"><span class="label">Farm ID:</span><span class="value">${farm.farmId}</span></div>` : ''}
+                    ${farm.owner ? `<div class="data-item"><span class="label">Owner:</span><span class="value">${farm.owner.slice(0, 10)}...${farm.owner.slice(-8)}</span></div>` : ''}
                 </div>
             </div>
         `;
     }
 
     // Inventory
-    if (farmData.inventory) {
-        const inv = farmData.inventory;
+    if (farm.inventory) {
+        const inv = farm.inventory;
         html += `
             <div class="farm-section">
                 <h4>🎒 Inventory</h4>
@@ -204,35 +210,103 @@ function renderFarmData(farmData) {
         `;
     }
 
-    // Animals/Buildings
-    if (farmData.buildings || farmData.animals) {
-        const buildingsData = farmData.buildings || farmData.animals || {};
+    // Animals - Parse from henHouse and barn
+    const chickens = farm.henHouse?.animals ? Object.values(farm.henHouse.animals) : [];
+    const barnAnimals = farm.barn?.animals ? Object.values(farm.barn.animals) : [];
+    
+    if (chickens.length > 0 || barnAnimals.length > 0) {
         html += `
             <div class="farm-section">
-                <h4>🏗️ Buildings & Animals</h4>
-                <div class="buildings-display">
-                    ${Object.entries(buildingsData).map(([key, data]) => `
-                        <div class="building-card">
-                            <strong>${key}</strong>
-                            <pre class="json-block">${JSON.stringify(data, null, 2)}</pre>
+                <h4>🐔 Animals</h4>
+        `;
+        
+        if (chickens.length > 0) {
+            html += `
+                <div class="animal-group">
+                    <h5>Hen House (${chickens.length} chickens)</h5>
+                    <div class="data-grid">
+                        ${chickens.map((animal, i) => `
+                            <div class="data-item">
+                                <span class="label">Chicken ${i + 1}:</span>
+                                <span class="value">Lvl ${animal.experience || 0} | ${animal.state || 'idle'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (barnAnimals.length > 0) {
+            const cows = barnAnimals.filter(a => a.type === 'Cow');
+            const sheep = barnAnimals.filter(a => a.type === 'Sheep');
+            
+            if (cows.length > 0) {
+                html += `
+                    <div class="animal-group">
+                        <h5>Barn - Cows (${cows.length})</h5>
+                        <div class="data-grid">
+                            ${cows.map((animal, i) => `
+                                <div class="data-item">
+                                    <span class="label">Cow ${i + 1}:</span>
+                                    <span class="value">Lvl ${animal.experience || 0} | ${animal.state || 'idle'}</span>
+                                </div>
+                            `).join('')}
                         </div>
-                    `).join('')}
+                    </div>
+                `;
+            }
+            
+            if (sheep.length > 0) {
+                html += `
+                    <div class="animal-group">
+                        <h5>Barn - Sheep (${sheep.length})</h5>
+                        <div class="data-grid">
+                            ${sheep.map((animal, i) => `
+                                <div class="data-item">
+                                    <span class="label">Sheep ${i + 1}:</span>
+                                    <span class="value">Lvl ${animal.experience || 0} | ${animal.state || 'idle'}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        html += `</div>`;
+    }
+    
+    // Buildings
+    if (farm.buildings && Object.keys(farm.buildings).length > 0) {
+        html += `
+            <div class="farm-section">
+                <h4>🏗️ Buildings</h4>
+                <div class="data-grid">
+                    ${Object.entries(farm.buildings).map(([building, data]) => {
+                        const level = data.coordinates?.length || 1;
+                        return `
+                            <div class="data-item">
+                                <span class="label">${building}:</span>
+                                <span class="value">Level ${level}</span>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             </div>
         `;
     }
 
     // Skills/Bumpkin
-    if (farmData.bumpkin?.skills) {
-        const skills = farmData.bumpkin.skills;
+    if (farm.bumpkin?.skills) {
+        const skills = farm.bumpkin.skills;
         html += `
             <div class="farm-section">
-                <h4>⭐ Skills</h4>
+                <h4>⭐ Bumpkin Skills</h4>
                 <div class="data-grid">
                     ${Object.entries(skills).sort(([a], [b]) => a.localeCompare(b)).map(([skill, level]) => `
                         <div class="data-item">
                             <span class="label">${skill}:</span>
-                            <span class="value">Level ${level}</span>
+                            <span class="value">✓</span>
                         </div>
                     `).join('')}
                 </div>
@@ -241,28 +315,28 @@ function renderFarmData(farmData) {
     }
 
     // Wearables/Collectibles
-    if (farmData.wardrobe || farmData.collectibles) {
+    if (farm.wardrobe || farm.collectibles) {
         html += `
             <div class="farm-section">
                 <h4>👕 Wearables & Collectibles</h4>
-                ${farmData.wardrobe ? `
+                ${farm.wardrobe ? `
                     <details class="expandable-section">
-                        <summary>Wardrobe (${Object.keys(farmData.wardrobe).length} items)</summary>
+                        <summary>Wardrobe (${Object.keys(farm.wardrobe).length} items)</summary>
                         <div class="data-grid">
-                            ${Object.keys(farmData.wardrobe).sort().map(item => `
-                                <div class="data-item"><span class="label">${item}</span></div>
+                            ${Object.keys(farm.wardrobe).sort().map(item => `
+                                <div class="data-item"><span class="label">${item}</span><span class="value">✓</span></div>
                             `).join('')}
                         </div>
                     </details>
                 ` : ''}
-                ${farmData.collectibles ? `
+                ${farm.collectibles ? `
                     <details class="expandable-section">
-                        <summary>Collectibles (${Object.keys(farmData.collectibles).length} items)</summary>
+                        <summary>Collectibles (${Object.keys(farm.collectibles).length} placed)</summary>
                         <div class="data-grid">
-                            ${Object.entries(farmData.collectibles).sort(([a], [b]) => a.localeCompare(b)).map(([item, data]) => `
+                            ${Object.entries(farm.collectibles).map(([id, data]) => `
                                 <div class="data-item">
-                                    <span class="label">${item}:</span>
-                                    <span class="value">${JSON.stringify(data)}</span>
+                                    <span class="label">${data.id || id}:</span>
+                                    <span class="value">x:${data.coordinates?.x || 0}, y:${data.coordinates?.y || 0}</span>
                                 </div>
                             `).join('')}
                         </div>
@@ -278,7 +352,7 @@ function renderFarmData(farmData) {
             <h4>🔍 Complete Farm Data (Raw JSON)</h4>
             <details class="expandable-section">
                 <summary>Expand to view full JSON structure</summary>
-                <pre class="json-block">${JSON.stringify(farmData, null, 2)}</pre>
+                <pre class="json-block">${JSON.stringify(farm, null, 2)}</pre>
             </details>
         </div>
     `;
