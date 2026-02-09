@@ -35,6 +35,19 @@ A comprehensive web-based calculator for Sunflower Land farms, providing analyti
   - Never transmitted to any server except official Sunflower Land API (via CORS proxy)
   - All calculations performed client-side
 
+## ⚠️ Important Setup Note
+
+**Firebase Credentials Required**: This project requires you to create your own `firebase-config.js` file with your Firebase credentials. The credentials are **not included** in this repository for security reasons.
+
+**Quick Setup:**
+```bash
+# Copy the template
+cp js/firebase-config.template.js js/firebase-config.js
+# Edit firebase-config.js with your Firebase credentials from Firebase Console
+```
+
+See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed setup instructions.
+
 ## ⚠️ Important: CORS Proxy
 
 Due to browser security (CORS policy), GitHub Pages cannot directly access the Sunflower Land APIs. This calculator uses a CORS proxy service (corsproxy.io) to route API requests. This means:
