@@ -156,6 +156,10 @@
                         <span class="icon">🌿</span>
                         <span class="label">Greenhouse</span>
                     </button>
+                    <button class="nav-tab" data-calculator="raw-data">
+                        <span class="icon">📄</span>
+                        <span class="label">Raw Data</span>
+                    </button>
                 </nav>
             </aside>
 
@@ -263,6 +267,17 @@
                         </header>
                         <div id="greenhouse-results" class="calc-results">
                             <!-- Results populated by greenhouse.js -->
+                        </div>
+                    </div>
+
+                    <!-- Raw Data Viewer -->
+                    <div id="calc-raw-data" class="calc-panel">
+                        <header class="calc-header">
+                            <h2>📄 Raw Data Viewer</h2>
+                            <p>View raw API responses for debugging</p>
+                        </header>
+                        <div id="raw-data-container" class="calc-results">
+                            <!-- Raw data display will be populated here -->
                         </div>
                     </div>
                 </div>

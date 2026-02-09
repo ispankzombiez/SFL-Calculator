@@ -9,6 +9,7 @@ import * as itemDetector from './item-detector.js';
 import * as firebaseAuth from './firebase-backend.js';
 import * as dashboardModule from './dashboard.js';
 import * as cowView from './views/cow-view.js';
+import * as rawDataView from './views/raw-data-view.js';
 
 // Import calculators
 import * as cowCalc from './calculators/cow.js';
@@ -1245,6 +1246,15 @@ function renderCalculator(calculatorName) {
         dashboardModule.initializeDashboard().catch(err => {
             console.error('Failed to render overview:', err);
         });
+        return;
+    }
+    
+    // Special case for raw-data - uses different container ID
+    if (calculatorName === 'raw-data') {
+        const container = document.getElementById('raw-data-container');
+        if (container) {
+            rawDataView.renderRawDataView(container);
+        }
         return;
     }
     

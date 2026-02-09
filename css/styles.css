@@ -1707,3 +1707,270 @@ body.dark-mode #raw-data-content {
     border: 2px solid var(--color-danger);
     color: var(--color-danger);
 }
+/* ========================================
+   RAW DATA VIEWER STYLES
+   ======================================== */
+
+.raw-data-viewer {
+    padding: var(--spacing-lg);
+}
+
+.data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    background: var(--color-bg-card);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+
+.data-header h3 {
+    margin: 0;
+    color: var(--color-text);
+}
+
+.data-header p {
+    margin: var(--spacing-xs) 0 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.9em;
+}
+
+.data-section {
+    background: var(--color-bg-card);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.section-header h3 {
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--color-text);
+}
+
+.section-subtitle {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.9em;
+}
+
+.data-content {
+    margin-top: var(--spacing-md);
+}
+
+/* Price Categories */
+.price-categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.price-category h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--color-primary);
+    font-size: 1.1em;
+}
+
+.price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.price-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm);
+    background: var(--color-bg);
+    border-radius: var(--border-radius-sm);
+}
+
+.item-name {
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.item-price {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Farm Sections */
+.farm-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.farm-section {
+    padding: var(--spacing-md);
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+}
+
+.farm-section h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--color-primary);
+    font-size: 1.1em;
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.data-item {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm);
+    background: var(--color-bg-card);
+    border-radius: var(--border-radius-sm);
+}
+
+.data-item .label {
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.data-item .value {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+/* Inventory Display */
+.inventory-display {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.inventory-category {
+    padding: var(--spacing-md);
+    background: var(--color-bg-card);
+    border-radius: var(--border-radius);
+}
+
+.inventory-category h5 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--color-text);
+    font-size: 1em;
+}
+
+/* Buildings Display */
+.buildings-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.building-card {
+    padding: var(--spacing-md);
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+}
+
+.building-card strong {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+    font-size: 1em;
+}
+
+/* JSON Block */
+.json-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.85em;
+    line-height: 1.5;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Expandable Sections */
+.expandable-section {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+}
+
+.expandable-section summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-primary);
+    padding: var(--spacing-sm);
+    user-select: none;
+}
+
+.expandable-section summary:hover {
+    background: var(--color-bg-card);
+    border-radius: var(--border-radius-sm);
+}
+
+.expandable-section[open] summary {
+    margin-bottom: var(--spacing-md);
+}
+
+/* Export Buttons */
+.export-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+/* Info/No Data Messages */
+.info-box {
+    padding: var(--spacing-xl);
+    background: var(--color-bg-card);
+    border-radius: var(--border-radius);
+    text-align: center;
+    border: 2px dashed var(--color-border);
+}
+
+.info-box p {
+    margin: var(--spacing-sm) 0;
+    color: var(--color-text-muted);
+}
+
+.no-data {
+    padding: var(--spacing-lg);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Toast Animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
