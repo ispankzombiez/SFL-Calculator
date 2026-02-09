@@ -137,14 +137,76 @@ export async function createAccount(email, password) {
 }
 
 /**
- * Sign in with Google (using Firebase SDK client-side for better UX)
- * Note: This still requires firebase SDK, but only the public web API key
+ * Sign in with Google (HYBRID: Uses Firebase SDK client-side for better UX)
+ * 
+ * This uses Firebase SDK directly for Google auth popup (better UX).
+ * Only the public web API key is exposed, which is acceptable per Firebase docs.
+ * Firestore operations still go through our secure worker backend.
  */
 export async function signInWithGoogle() {
-    // For Google sign-in, we'll still use Firebase SDK client-side
-    // because the popup UX is much better
-    // Only the web API key is exposed (which is acceptable)
-    throw new Error('Google sign-in requires Firebase SDK - use hybrid approach')
+    try {
+        // Check if Firebase SDK is loaded
+        if (typeof firebase === 'undefined') {
+            throw new Error('Firebase SDK not loaded. Google Sign-In requires Firebase SDK.')
+        }
+        
+        // Initialize Firebase if not already done
+        if (!firebase.apps.length) {
+            // Use minimal public config (just what's needed for Google Auth)
+            firebase.initializeApp({
+                apiKey: "AIzaSyAv5mzdWcWJUwfZIwApkyWR9Vn2rGTwnyM",
+                authDomain: "sfl-calculator.firebaseapp.com",
+                projectId: "sfl-calculator"
+            })
+        }
+        
+        const auth = firebase.auth()
+        const provider = new firebase.auth.GoogleAuthProvider()
+        
+        console.log('[Firebase Backend] Starting Google sign-in popup...')
+        const result = await auth.signInWithPopup(provider)
+        
+        console.log('[Firebase Backend] Google sign-in successful:', result.user.email)
+        
+        // Get the ID token
+        const idToken = await result.user.getIdToken()
+        
+        // Create user object
+        const user = {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            photoURL: result.user.photoURL,
+            idToken: idToken
+        }
+        
+        // Save session
+        saveSession(user, idToken)
+        
+        // Dispatch auth state changed event
+        window.dispatchEvent(new CustomEvent('authStateChanged', { 
+            detail: { user } 
+        }))
+        
+        console.log('[Firebase Backend] Session saved, user signed in')
+        
+        return user
+        
+    } catch (error) {
+        console.error('[Firebase Backend] Google sign-in error:', error)
+        
+        // User-friendly error messages
+        let userMessage = 'Google sign-in failed. Please try again.'
+        if (error.code === 'auth/popup-closed-by-user') {
+            userMessage = 'Sign-in cancelled.'
+        } else if (error.code === 'auth/popup-blocked') {
+            userMessage = 'Pop-up blocked by browser. Please allow pop-ups for this site.'
+        } else if (error.code === 'auth/network-request-failed') {
+            userMessage = 'Network error. Please check your connection.'
+        }
+        
+        throw new Error(userMessage)
+    }
 }
 
 /**
@@ -180,9 +242,21 @@ export async function signInAnonymously() {
 /**
  * Sign out
  */
+/**
+ * Sign out
+ */
 export async function signOut() {
     try {
         clearSession()
+        
+        // If Firebase SDK is loaded (Google Sign-In), sign out from there too
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            const auth = firebase.auth()
+            if (auth.currentUser) {
+                await auth.signOut()
+                console.log('[Firebase Backend] Signed out from Firebase SDK')
+            }
+        }
         
         window.dispatchEvent(new CustomEvent('authStateChanged', { 
             detail: { user: null } 

@@ -34,6 +34,25 @@ async function handleRequest(request) {
   }
 
   try {
+    // Health check endpoint (GET request, no auth needed)
+    if (path === '/health' || path === '/status') {
+      return jsonResponse({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        hasProjectId: typeof FIREBASE_PROJECT_ID !== 'undefined',
+        hasApiKey: typeof FIREBASE_API_KEY !== 'undefined',
+        routes: [
+          '/health',
+          '/firebase/auth/email (POST)',
+          '/firebase/auth/create (POST)',
+          '/firebase/auth/google (POST)',
+          '/firebase/user/save (POST)',
+          '/firebase/user/load (POST)',
+          '/?url=TARGET (CORS proxy)'
+        ]
+      })
+    }
+
     // Route 1: Firebase Authentication Operations
     if (path === '/firebase/auth/google') {
       return await handleGoogleAuth(request)
