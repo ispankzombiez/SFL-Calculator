@@ -73,6 +73,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('authError', handleAuthError);
     console.log('[App] Auth error listener registered');
     
+    // Expose loadRawAPIData for dashboard.js
+    window.loadRawAPIData = firebaseAuth.loadRawAPIData;
+    console.log('[App] Exposed loadRawAPIData to window');
+    
     // Check initial auth state
     if (firebaseAuth.isSignedIn()) {
         console.log('[App] User already signed in');
@@ -1115,25 +1119,7 @@ async function connectFarm(farmId, apiKey, retryCount = 0) {
         updateLoadingStep('step-items', 'complete');
         updateLoadingStep('step-calc', 'loading');
         
-        // Run all calculators
-        const config = itemDetector.getDefaultConfig();
-        const results = {};
-        
-        for (const [name, calculator] of Object.entries(CALCULATORS)) {
-            results[name] = calculator.calculate(detectedItems, boosts, prices, config);
-            storage.saveResults(name, results[name]);
-            
-            // Save to Firebase if signed in
-            if (firebaseAuth.isSignedIn()) {
-                firebaseAuth.saveCalculatorResults(name, results[name]).catch(err => {
-                    console.error(`Failed to save ${name} results to Firebase:`, err);
-                });
-            }
-        }
-        
-        updateLoadingStep('step-calc', 'complete');
-        
-        // Update app state
+        // Update app state - calculators will run via dashboard.js
         appState = {
             isConnected: true,
             farmId,
@@ -1142,14 +1128,16 @@ async function connectFarm(farmId, apiKey, retryCount = 0) {
             farmData,
             detectedItems,
             boosts,
-            results,
+            results: {}, // Will be populated by dashboard
             currentCalculator: 'overview',
         };
         
         // Save last update time
         storage.saveLastUpdate();
         
-        // Show dashboard
+        updateLoadingStep('step-calc', 'complete');
+        
+        // Show dashboard - this will initialize all calculators via dashboard.js
         showDashboard();
         
     } catch (error) {
