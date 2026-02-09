@@ -7,6 +7,7 @@ import * as api from './api.js';
 import * as storage from './storage.js';
 import * as itemDetector from './item-detector.js';
 import * as firebaseAuth from './firebase-auth.js';
+import * as dashboardModule from './dashboard.js';
 
 // Import calculators
 import * as cowCalc from './calculators/cow.js';
@@ -18,6 +19,7 @@ import * as greenhouseCalc from './calculators/greenhouse.js';
 
 // Calculator registry
 const CALCULATORS = {
+    overview: { name: 'overview', hasRender: false }, // Special case for overview
     cows: cowCalc,
     sheep: sheepCalc,
     chickens: chickenCalc,
@@ -36,7 +38,7 @@ let appState = {
     detectedItems: null,
     boosts: null,
     results: {},
-    currentCalculator: 'cows',
+    currentCalculator: 'overview',
 };
 
 /**
@@ -687,7 +689,33 @@ async function handleUserSignedIn() {
                 refreshBtnLanding.style.display = 'block';
             }
             
-            // Auto-connect with saved credentials
+            // Try to load cached data from Firestore first
+            updateLandingStatus('Loading cached farm data...');
+            const cachedData = await firebaseAuth.loadRawAPIData();
+            
+            if (cachedData && cachedData.prices && cachedData.farmData) {
+                console.log('[App] Found cached data in Firestore');
+                
+                // Check if cache is stale (older than 24 hours)
+                const cacheAge = cachedData.timestamp ? Date.now() - cachedData.timestamp : Infinity;
+                const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
+                
+                if (cacheAge < maxCacheAge) {
+                    console.log('[App] Cache is fresh, using cached data');
+                    updateLandingStatus('Loading from cache...');
+                    
+                    // Load from cache
+                    await loadFromCache(credentials.farmId, credentials.apiKey, cachedData);
+                    return;
+                } else {
+                    console.log('[App] Cache is stale, refreshing from API');
+                    updateLandingStatus('Cache is stale, fetching fresh data...');
+                }
+            } else {
+                console.log('[App] No cached data found, fetching from API');
+            }
+            
+            // Cache miss or stale - fetch from API
             updateLandingStatus('Connecting to your farm...');
             await connectFarm(credentials.farmId, credentials.apiKey);
         } else {
@@ -703,6 +731,72 @@ async function handleUserSignedIn() {
         
         // Show credentials setup modal as fallback
         setTimeout(() => showCredentialsModal(), 1000);
+    }
+}
+
+/**
+ * Load from cached data without hitting the API
+ */
+async function loadFromCache(farmId, apiKey, cachedData) {
+    try {
+        showScreen('loading');
+        updateLoadingStep('step-prices', 'complete');
+        updateLoadingStep('step-farm', 'complete');
+        updateLoadingStep('step-items', 'loading');
+        
+        // Parse cached JSON data
+        const prices = JSON.parse(cachedData.prices);
+        const farmData = JSON.parse(cachedData.farmData);
+        
+        // Detect items and calculate boosts
+        const detectedItems = itemDetector.detectItems(farmData);
+        const boosts = detectedItems.boosts;
+        
+        updateLoadingStep('step-items', 'complete');
+        updateLoadingStep('step-calc', 'loading');
+        
+        // Run all calculators
+        const config = itemDetector.getDefaultConfig();
+        const results = {};
+        
+        for (const [name, calculator] of Object.entries(CALCULATORS)) {
+            if (calculator.calculate) {
+                results[name] = calculator.calculate(detectedItems, boosts, prices, config);
+                storage.saveResults(name, results[name]);
+                
+                // Save to Firebase if signed in
+                if (firebaseAuth.isSignedIn()) {
+                    firebaseAuth.saveCalculatorResults(name, results[name]).catch(err => {
+                        console.error(`Failed to save ${name} results to Firebase:`, err);
+                    });
+                }
+            }
+        }
+        
+        updateLoadingStep('step-calc', 'complete');
+        
+        // Update app state
+        appState = {
+            isConnected: true,
+            farmId,
+            apiKey,
+            prices,
+            farmData,
+            detectedItems,
+            boosts,
+            results,
+            currentCalculator: 'overview',
+        };
+        
+        // Show dashboard
+        showDashboard();
+        
+    } catch (error) {
+        console.error('[App] Error loading from cache:', error);
+        
+        // Fall back to API fetch
+        console.log('[App] Cache load failed, falling back to API');
+        await connectFarm(farmId, apiKey);
     }
 }
 
@@ -1049,7 +1143,7 @@ async function connectFarm(farmId, apiKey, retryCount = 0) {
             detectedItems,
             boosts,
             results,
-            currentCalculator: 'cows',
+            currentCalculator: 'overview',
         };
         
         // Save last update time
@@ -1122,6 +1216,11 @@ function showDashboard() {
         lastUpdated.textContent = `Updated ${storage.getLastUpdateFormatted()}`;
     }
     
+    // Initialize dashboard overview with cached data
+    dashboardModule.initializeDashboard().catch(err => {
+        console.error('Failed to initialize dashboard:', err);
+    });
+    
     // Render current calculator
     renderCalculator(appState.currentCalculator);
 }
@@ -1152,8 +1251,16 @@ function switchCalculator(calculatorName) {
  * Render calculator results
  */
 function renderCalculator(calculatorName) {
+    // Special case for overview - it's handled by dashboard.js
+    if (calculatorName === 'overview') {
+        dashboardModule.initializeDashboard().catch(err => {
+            console.error('Failed to render overview:', err);
+        });
+        return;
+    }
+    
     const calculator = CALCULATORS[calculatorName];
-    if (!calculator) return;
+    if (!calculator || !calculator.calculate) return;
     
     const container = document.getElementById(`${calculatorName}-results`);
     if (!container) return;

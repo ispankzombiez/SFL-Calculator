@@ -128,7 +128,11 @@
             <!-- Sidebar/Tabs Navigation -->
             <aside class="sidebar">
                 <nav class="calculator-nav">
-                    <button class="nav-tab active" data-calculator="cows">
+                    <button class="nav-tab active" data-calculator="overview">
+                        <span class="icon">📊</span>
+                        <span class="label">Overview</span>
+                    </button>
+                    <button class="nav-tab" data-calculator="cows">
                         <span class="icon">🐄</span>
                         <span class="label">Cows</span>
                     </button>
@@ -159,8 +163,45 @@
             <main class="calculator-content">
                 <!-- Calculator views will be dynamically loaded here -->
                 <div id="calculator-view" class="calculator-view">
-                    <!-- Default: Cows Calculator -->
-                    <div id="calc-cows" class="calc-panel active">
+                    <!-- Overview Dashboard -->
+                    <div id="calc-overview" class="calc-panel active">
+                        <header class="calc-header">
+                            <h2>📊 Farm Overview</h2>
+                            <p id="last-update-time">Loading...</p>
+                        </header>
+                        <div id="dashboard-container" class="calc-results">
+                            <!-- Balance Display -->
+                            <div id="balance-display" class="dashboard-section"></div>
+                            
+                            <!-- Economic Analysis Section -->
+                            <div class="dashboard-section">
+                                <h3>📈 Economic Analysis</h3>
+                                <div id="economic-analysis"></div>
+                            </div>
+                            
+                            <!-- Actionable Tasks -->
+                            <div class="dashboard-section">
+                                <h3>🎯 Actionable Tasks</h3>
+                                <div id="task-list"></div>
+                            </div>
+                            
+                            <!-- Summary Cards Grid -->
+                            <div class="dashboard-grid">
+                                <div id="animals-summary"></div>
+                                <div id="crops-summary"></div>
+                                <div id="resources-summary"></div>
+                            </div>
+                            
+                            <!-- Optimization Recommendations -->
+                            <div class="dashboard-section">
+                                <h3>💡 Profit Optimization</h3>
+                                <div id="optimizations"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cows Calculator -->
+                    <div id="calc-cows" class="calc-panel">
                         <header class="calc-header">
                             <h2>🐄 Cow Calculator</h2>
                             <p>Analyze feeding costs, milk/leather production, and profitability by level</p>
@@ -388,6 +429,152 @@
                 </form>
                 
                 <div id="credentials-error" class="error-message" style="display: none; margin-top: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Economic Settings Modal -->
+    <div id="economic-settings-modal" class="modal" style="display: none;">
+        <div class="modal-content settings-modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Economic Settings</h2>
+                <button class="close-modal" id="close-economic-settings-modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="settings-description">Configure your economic calculation preferences. These settings affect profit calculations and recommendations.</p>
+                
+                <form id="economic-settings-form">
+                    <!-- Basic Settings -->
+                    <div class="settings-section">
+                        <h3>Basic Configuration</h3>
+                        
+                        <div class="form-group">
+                            <label for="tax-rate">P2P Tax Rate (%)</label>
+                            <select id="tax-rate" name="tax-rate">
+                                <option value="0.05">5% (Default)</option>
+                                <option value="0.075">7.5%</option>
+                                <option value="0.10">10%</option>
+                                <option value="0.15">15%</option>
+                                <option value="0.20">20%</option>
+                                <option value="0.25">25%</option>
+                                <option value="0.50">50%</option>
+                            </select>
+                            <small>Tax rate applied when selling on P2P market</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="betty-rate">Betty Conversion Rate (Coins per SFL)</label>
+                            <input 
+                                type="number" 
+                                id="betty-rate" 
+                                name="betty-rate" 
+                                value="250" 
+                                min="1" 
+                                step="1"
+                            >
+                            <small>How many coins Betty gives per 1 SFL (check <a href="https://sfl.world/util/prices" target="_blank">sfl.world</a>)</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Animal Sleep Times -->
+                    <div class="settings-section">
+                        <h3>Animal Sleep Times (hours)</h3>
+                        
+                        <div class="form-group">
+                            <label for="cow-sleep-time">Cow Sleep Time</label>
+                            <input 
+                                type="number" 
+                                id="cow-sleep-time" 
+                                name="cow-sleep-time" 
+                                value="12" 
+                                min="1" 
+                                max="48" 
+                                step="0.5"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="chicken-sleep-time">Chicken Sleep Time</label>
+                            <input 
+                                type="number" 
+                                id="chicken-sleep-time" 
+                                name="chicken-sleep-time" 
+                                value="18" 
+                                min="1" 
+                                max="48" 
+                                step="0.5"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sheep-sleep-time">Sheep Sleep Time</label>
+                            <input 
+                                type="number" 
+                                id="sheep-sleep-time" 
+                                name="sheep-sleep-time" 
+                                value="24" 
+                                min="1" 
+                                max="48" 
+                                step="0.5"
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Owned Animals -->
+                    <div class="settings-section">
+                        <h3>Number of Animals/Nodes Owned</h3>
+                        
+                        <div class="form-group">
+                            <label for="num-cows">Cows</label>
+                            <input 
+                                type="number" 
+                                id="num-cows" 
+                                name="num-cows" 
+                                value="0" 
+                                min="0" 
+                                max="50"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="num-chickens">Chickens</label>
+                            <input 
+                                type="number" 
+                                id="num-chickens" 
+                                name="num-chickens" 
+                                value="0" 
+                                min="0" 
+                                max="50"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="num-sheep">Sheep</label>
+                            <input 
+                                type="number" 
+                                id="num-sheep" 
+                                name="num-sheep" 
+                                value="0" 
+                                min="0" 
+                                max="50"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="auto-detect-settings-btn" class="btn btn-secondary">
+                            <span class="icon">🔍</span>
+                            <span class="text">Auto-Detect from Farm</span>
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="icon">💾</span>
+                            <span class="text">Save Settings</span>
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="settings-success" class="success-message" style="display: none; margin-top: 12px;"></div>
+                <div id="settings-error" class="error-message" style="display: none; margin-top: 12px;"></div>
             </div>
         </div>
     </div>
