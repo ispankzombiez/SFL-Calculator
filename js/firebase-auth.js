@@ -393,12 +393,19 @@ export async function saveRawAPIData(prices, farmData) {
         console.warn('Failed to save raw API data to localStorage:', error);
     }
     
-    // Try to save to Firestore if user is signed in (non-critical)
-    if (!currentUser) return;
+    // Try to save to Firestore if user is signed in
+    if (!currentUser) {
+        console.log('⚠️ Cannot save to Firestore: User not signed in');
+        return;
+    }
 
     try {
         const apiDataDoc = db.collection('users').doc(currentUser.uid)
             .collection('apiData').doc('latest');
+        
+        console.log('💾 Attempting to save raw API data to Firestore...');
+        console.log('   User ID:', currentUser.uid);
+        console.log('   Path: users/' + currentUser.uid + '/apiData/latest');
         
         // Convert to JSON strings to avoid nested array issues in Firestore
         await apiDataDoc.set({
@@ -407,10 +414,25 @@ export async function saveRawAPIData(prices, farmData) {
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         });
         
-        console.log('Raw API data saved to Firestore');
+        console.log('✅ Raw API data successfully saved to Firestore');
     } catch (error) {
-        // Non-critical error - just log warning
-        console.warn('Unable to save raw API data to Firestore (this is optional):', error.message);
+        console.error('❌ Failed to save raw API data to Firestore');
+        console.error('   Error type:', error.code || error.name);
+        console.error('   Error message:', error.message);
+        console.error('   Full error:', error);
+        
+        if (error.code === 'permission-denied' || error.message.includes('permission')) {
+            console.error('');
+            console.error('🔒 FIRESTORE SECURITY RULES ISSUE:');
+            console.error('   Your Firebase security rules are blocking writes to the apiData collection.');
+            console.error('   To fix this, add these rules to your Firestore security rules:');
+            console.error('');
+            console.error('   match /users/{userId}/apiData/{document=**} {');
+            console.error('     allow read, write: if request.auth != null && request.auth.uid == userId;');
+            console.error('   }');
+            console.error('');
+            console.error('   Go to: Firebase Console → Firestore Database → Rules');
+        }
     }
 }
 
