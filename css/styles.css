@@ -1743,6 +1743,68 @@ body.dark-mode #raw-data-content {
     margin-bottom: var(--spacing-lg);
 }
 
+/* Farm Overview Section */
+.farm-overview {
+    border: 2px solid var(--color-primary);
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.overview-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.overview-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.overview-item.highlight {
+    background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-card) 100%);
+    border-color: var(--color-primary);
+}
+
+.overview-item .icon {
+    font-size: 2em;
+    line-height: 1;
+}
+
+.overview-item .item-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    flex: 1;
+}
+
+.overview-item .item-content .label {
+    font-size: 0.85em;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.overview-item .item-content .value {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.overview-item.highlight .item-content .value {
+    color: var(--color-primary);
+    font-size: 1.4em;
+}
+
 .section-header {
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-md);
