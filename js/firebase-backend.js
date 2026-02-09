@@ -32,6 +32,26 @@ export function initialize() {
 }
 
 /**
+ * Initialize Firebase (compatibility function for firebase-auth.js API)
+ */
+export async function initializeFirebase() {
+    console.log('[Firebase Backend] Using Cloudflare Worker backend');
+    console.log('[Firebase Backend] Worker URL:', WORKER_URL);
+    
+    // No SDK to initialize - we use REST API through worker
+    // Just check if we have a stored session
+    const hasSession = initialize();
+    
+    if (hasSession) {
+        console.log('[Firebase Backend] Restored session from localStorage');
+    } else {
+        console.log('[Firebase Backend] No stored session found');
+    }
+    
+    return true; // Always return true since no SDK initialization needed
+}
+
+/**
  * Save session to localStorage
  */
 function saveSession(user, token) {

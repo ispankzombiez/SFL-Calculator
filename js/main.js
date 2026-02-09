@@ -6,7 +6,7 @@
 import * as api from './api.js';
 import * as storage from './storage.js';
 import * as itemDetector from './item-detector.js';
-import * as firebaseAuth from './firebase-auth.js';
+import * as firebaseAuth from './firebase-backend.js';
 import * as dashboardModule from './dashboard.js';
 import * as cowView from './views/cow-view.js';
 
